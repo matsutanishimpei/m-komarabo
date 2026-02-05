@@ -1,2 +1,7 @@
 name = "m-komarabo"
 pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "m-komarabo-db"
+database_id = "6c39ba94-5b7a-4378-8a3a-305fc7a55ce6"
