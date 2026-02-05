@@ -1,0 +1,15 @@
+{
+  "name": "m-komarabo",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev src/index.ts",
+    "deploy": "wrangler pages deploy src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240101.0",
+    "wrangler": "^3.0.0"
+  }
+}
