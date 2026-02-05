@@ -29,7 +29,7 @@
 
     <script>
         async function fetchIssues() {
-            const res = await fetch('/list-issues');
+            const res = await fetch('/api/list-issues');
             const data = await res.json();
             const list = document.getElementById('issue-list');
             list.innerHTML = data.map(i => `
@@ -46,7 +46,7 @@
                 title: document.getElementById('title').value,
                 description: document.getElementById('description').value
             };
-            await fetch('/post-issue', {
+            await fetch('/api/post-issue', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
