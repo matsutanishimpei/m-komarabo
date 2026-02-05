@@ -5,12 +5,12 @@ type Bindings = {
   DB: D1Database
 }
 
-const app = new Hono<{ Bindings: Bindings }>()
+const app = new Hono<{ Bindings: Bindings }>() 
 
 // トップページ
-app.get('/', (c) => {
-  return c.text('困りごとラボ 〜街の課題の試作室〜 起動中（DB接続完了）')
-})
+// app.get('/', (c) => {
+//   return c.text('困りごとラボ 〜街の課題の試作室〜 起動中（DB接続完了）')
+// })
 
 // 悩み事を投稿してDBに保存するAPI
 app.post('/post-issue', async (c) => {
