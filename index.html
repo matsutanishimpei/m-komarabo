@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>困りごとラボ 〜街の課題の試作室〜</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background: #0070f3; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .issue { border-bottom: 1px solid #eee; padding: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>困りごとラボ</h1>
+    <div class="card">
+        <h3>新しい「困りごと」を投稿する</h3>
+        <input type="text" id="user_hash" placeholder="あなたの識別名（例: 名前やニックネーム）">
+        <input type="text" id="title" placeholder="困りごとのタイトル">
+        <textarea id="description" rows="4" placeholder="具体的な内容を教えてください"></textarea>
+        <button onclick="postIssue()">投稿する</button>
+    </div>
+
+    <div class="card">
+        <h3>受付中の困りごと一覧</h3>
+        <div id="issue-list">読み込み中...</div>
+    </div>
+
+    <script>
+        async function fetchIssues() {
+            const res = await fetch('/list-issues');
+            const data = await res.json();
+            const list = document.getElementById('issue-list');
+            list.innerHTML = data.map(i => `
+                <div class="issue">
+                    <strong>${i.title}</strong> <small>(${i.user_hash})</small>
+                    <p>${i.description}</p>
+                </div>
+            `).join('') || 'まだ投稿がありません';
+        }
+
+        async function postIssue() {
+            const payload = {
+                user_hash: document.getElementById('user_hash').value,
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value
+            };
+            await fetch('/post-issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            alert('投稿しました！');
+            fetchIssues();
+        }
+
+        fetchIssues();
+    </script>
+</body>
+</html>
