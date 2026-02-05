@@ -2,8 +2,8 @@
   "name": "m-komarabo",
   "type": "module",
   "scripts": {
-    "dev": "wrangler pages dev src/index.ts",
-    "deploy": "wrangler pages deploy src/index.ts"
+    "dev": "wrangler pages dev public",
+    "deploy": "wrangler pages deploy public"
   },
   "dependencies": {
     "hono": "^4.0.0"
