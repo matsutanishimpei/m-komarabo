@@ -47,15 +47,20 @@ app.get('/list-issues', async (c) => {
   const filter = c.req.query('filter') || 'all'
   const user_hash = c.req.query('user_hash')
 
+  // developer_user_hash も取得できるように JOIN を追加
   let query = `
-    SELECT issues.*, users.user_hash 
+    SELECT 
+      issues.*, 
+      requester.user_hash as user_hash,
+      developer.user_hash as developer_user_hash
     FROM issues 
-    JOIN users ON issues.requester_id = users.id
+    JOIN users as requester ON issues.requester_id = requester.id
+    LEFT JOIN users as developer ON issues.developer_id = developer.id
   `
   let params: any[] = []
 
   if (filter === 'mine' && user_hash) {
-    query += ' WHERE users.user_hash = ?'
+    query += ' WHERE requester.user_hash = ?'
     params.push(user_hash)
   }
 
@@ -65,15 +70,36 @@ app.get('/list-issues', async (c) => {
   return c.json(results)
 })
 
-// ステータス更新API
+// ステータス更新（挙手・着手）API
 app.post('/update-issue-status', async (c) => {
-  const { id, status } = await c.req.json()
+  const { id, status, user_hash } = await c.req.json()
 
-  await c.env.DB.prepare(
-    'UPDATE issues SET status = ? WHERE id = ?'
-  ).bind(status, id).run()
+  // 着手時は developer_id も更新
+  if (status === 'progress' && user_hash) {
+    const user = await c.env.DB.prepare('SELECT id FROM users WHERE user_hash = ?').bind(user_hash).first()
+    if (user) {
+      await c.env.DB.prepare(
+        'UPDATE issues SET status = ?, developer_id = ? WHERE id = ?'
+      ).bind(status, user.id, id).run()
+    }
+  } else {
+    await c.env.DB.prepare(
+      'UPDATE issues SET status = ? WHERE id = ?'
+    ).bind(status, id).run()
+  }
 
   return c.json({ success: true, message: `ステータスを ${status} に更新しました` })
+})
+
+// 挙手を下ろす（キャンセル）API
+app.post('/unassign-issue', async (c) => {
+  const { id } = await c.req.json()
+
+  await c.env.DB.prepare(
+    'UPDATE issues SET status = "open", developer_id = NULL WHERE id = ?'
+  ).bind(id).run()
+
+  return c.json({ success: true, message: '挙手を下ろしました' })
 })
 
 // 悩み事を投稿するAPI -> パスは /api/post-issue になる

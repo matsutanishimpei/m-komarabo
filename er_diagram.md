@@ -16,6 +16,7 @@ erDiagram
         text description "詳細内容"
         text status "ステータス(open/progress/closed)"
         text github_url "GitHub連携URL"
+        integer developer_id FK "着手開発者ID"
         datetime created_at "投稿日時"
     }
 

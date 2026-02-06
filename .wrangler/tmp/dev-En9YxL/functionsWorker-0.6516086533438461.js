@@ -2087,13 +2087,17 @@ app.get("/list-issues", async (c) => {
   const filter = c.req.query("filter") || "all";
   const user_hash = c.req.query("user_hash");
   let query = `
-    SELECT issues.*, users.user_hash 
+    SELECT 
+      issues.*, 
+      requester.user_hash as user_hash,
+      developer.user_hash as developer_user_hash
     FROM issues 
-    JOIN users ON issues.requester_id = users.id
+    JOIN users as requester ON issues.requester_id = requester.id
+    LEFT JOIN users as developer ON issues.developer_id = developer.id
   `;
   let params = [];
   if (filter === "mine" && user_hash) {
-    query += " WHERE users.user_hash = ?";
+    query += " WHERE requester.user_hash = ?";
     params.push(user_hash);
   }
   query += " ORDER BY created_at DESC";
@@ -2101,11 +2105,27 @@ app.get("/list-issues", async (c) => {
   return c.json(results);
 });
 app.post("/update-issue-status", async (c) => {
-  const { id, status } = await c.req.json();
-  await c.env.DB.prepare(
-    "UPDATE issues SET status = ? WHERE id = ?"
-  ).bind(status, id).run();
+  const { id, status, user_hash } = await c.req.json();
+  if (status === "progress" && user_hash) {
+    const user = await c.env.DB.prepare("SELECT id FROM users WHERE user_hash = ?").bind(user_hash).first();
+    if (user) {
+      await c.env.DB.prepare(
+        "UPDATE issues SET status = ?, developer_id = ? WHERE id = ?"
+      ).bind(status, user.id, id).run();
+    }
+  } else {
+    await c.env.DB.prepare(
+      "UPDATE issues SET status = ? WHERE id = ?"
+    ).bind(status, id).run();
+  }
   return c.json({ success: true, message: `\u30B9\u30C6\u30FC\u30BF\u30B9\u3092 ${status} \u306B\u66F4\u65B0\u3057\u307E\u3057\u305F` });
+});
+app.post("/unassign-issue", async (c) => {
+  const { id } = await c.req.json();
+  await c.env.DB.prepare(
+    'UPDATE issues SET status = "open", developer_id = NULL WHERE id = ?'
+  ).bind(id).run();
+  return c.json({ success: true, message: "\u6319\u624B\u3092\u4E0B\u308D\u3057\u307E\u3057\u305F" });
 });
 app.post("/post-issue", async (c) => {
   const { title, description, user_hash } = await c.req.json();

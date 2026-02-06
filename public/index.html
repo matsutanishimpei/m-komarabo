@@ -128,8 +128,27 @@
             </div>
 
             <!-- Developer View (List) -->
-            <div id="view-developer" class="hidden">
-                <div id="list-developer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="view-developer" class="hidden flex flex-col gap-12">
+                <!-- My Work -->
+                <div class="flex flex-col gap-6">
+                    <h4 class="font-bold text-slate-400 flex items-center gap-2 text-xs uppercase tracking-widest px-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                        あなたが現在着手中の課題
+                    </h4>
+                    <div id="list-developer-assigned"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[100px] p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                    </div>
+                </div>
+
+                <!-- Available Issues -->
+                <div class="flex flex-col gap-6">
+                    <h4 class="font-bold text-slate-400 flex items-center gap-2 text-xs uppercase tracking-widest px-2">
+                        <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                        解決を待っている課題一覧
+                    </h4>
+                    <div id="list-developer-available" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -237,26 +256,38 @@
         }
 
         function renderDeveloper(data) {
-            const list = document.getElementById('list-developer');
-            // 開発者モードでは全ユーザーの 'open' な課題のみ表示（自分のも含むが基本は他人の助け）
-            const openItems = data.filter(i => (i.status || 'open') === 'open');
+            const assignedList = document.getElementById('list-developer-assigned');
+            const availableList = document.getElementById('list-developer-available');
 
-            list.innerHTML = openItems.map(i => `
+            // 自分が着手中 (status=progress AND developer_user_hash=自分)
+            const myWork = data.filter(i => i.status === 'progress' && i.developer_user_hash === currentUserHash);
+            // 未着手 (status=open)
+            const available = data.filter(i => (i.status || 'open') === 'open');
+
+            const renderCard = (i, isMyWork) => `
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:border-blue-200 transition">
                     <div>
                         <div class="flex justify-between items-start mb-4">
-                            <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded">NEW</span>
+                            <span class="text-[10px] font-bold ${isMyWork ? 'text-amber-500 bg-amber-50' : 'text-blue-500 bg-blue-50'} px-2 py-1 rounded tracking-widest uppercase">
+                                ${isMyWork ? 'Progress' : 'Open'}
+                            </span>
                             <span class="text-[10px] text-slate-400 font-medium">${i.user_hash}</span>
                         </div>
-                        <h5 class="text-lg font-bold text-slate-800 mb-2">${i.title}</h5>
-                        <p class="text-sm text-slate-500 line-clamp-3 mb-6">${i.description}</p>
+                        <h5 class="text-lg font-bold text-slate-800 mb-2 truncate">${i.title}</h5>
+                        <p class="text-sm text-slate-500 line-clamp-2 mb-6 h-10">${i.description}</p>
                     </div>
                     <div class="flex gap-2">
-                        <a href="detail.html?id=${i.id}" class="flex-1 text-center py-2 text-xs font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">詳細</a>
-                        <button onclick="takeIssue(${i.id})" class="flex-[2] py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md shadow-blue-100 transition">着手する</button>
+                        <a href="detail.html?id=${i.id}" class="flex-1 text-center py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">詳細</a>
+                        ${isMyWork
+                    ? `<button onclick="unassignIssue(${i.id})" class="flex-[2] py-2.5 text-xs font-bold text-white bg-slate-600 rounded-xl hover:bg-slate-700 transition">挙手を下ろす</button>`
+                    : `<button onclick="takeIssue(${i.id})" class="flex-[2] py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition">着手する</button>`
+                }
                     </div>
                 </div>
-            `).join('') || `<div class="col-span-full py-20 text-center text-slate-400 italic">現在解決を待っている課題はありません</div>`;
+            `;
+
+            assignedList.innerHTML = myWork.map(i => renderCard(i, true)).join('') || `<div class="col-span-full py-10 text-center text-slate-300 text-xs italic">現在着手中の課題はありません</div>`;
+            availableList.innerHTML = available.map(i => renderCard(i, false)).join('') || `<div class="col-span-full py-10 text-center text-slate-300 text-xs italic">募集中の課題はありません</div>`;
         }
 
         async function takeIssue(id) {
@@ -265,17 +296,36 @@
                 const res = await fetch('/api/update-issue-status', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, status: 'progress' })
+                    body: JSON.stringify({ id, status: 'progress', user_hash: currentUserHash })
                 });
                 if (res.ok) {
-                    alert('着手しました！相談者モードの進行中エリアで確認できます。');
+                    // 即時反映のためにデータをリロード
                     fetchIssues();
+                    alert('着手しました！「現在着手中」へ移動しました。');
                 }
             } catch (err) {
                 alert('エラーが発生しました');
             }
         }
         window.takeIssue = takeIssue;
+
+        async function unassignIssue(id) {
+            if (!confirm('この課題への挙手を下ろしますか？（未着手状態に戻ります）')) return;
+            try {
+                const res = await fetch('/api/unassign-issue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                if (res.ok) {
+                    fetchIssues();
+                    alert('挙手を下ろしました。');
+                }
+            } catch (err) {
+                alert('エラーが発生しました');
+            }
+        }
+        window.unassignIssue = unassignIssue;
 
         async function postIssue() {
             const apiKey = document.getElementById('gemini_api_key').value.trim();
