@@ -105,8 +105,8 @@
             if (apiKey) {
                 try {
                     const genAI = new GoogleGenerativeAI(apiKey);
-                    // 最も安定している 1.5-flash-latest を使用
-                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+                    // 最も標準的なモデル名 'gemini-1.5-flash' を使用します
+                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
                     const prompt = `ユーザーから以下の『困りごと』が投稿されました。これに対して、共感するような短い一言（30文字以内）を返してください。
                     タイトル: ${title}
@@ -120,9 +120,9 @@
                     }).catch(err => {
                         console.error("Gemini API Error details:", err);
                         if (err.message && err.message.includes("404")) {
-                            alert("AIエラー(404): モデルが見つかりません。APIキーが正しいか確認してください。");
+                            alert("AIエラー(404): モデル名が認識されませんでした。APIキーが有効か、またはAI Studioで別のモデルが推奨されていないか確認してください。\n(試行: gemini-1.5-flash)");
                         } else if (err.message && err.message.includes("429")) {
-                            alert("AIエラー(429): 利用制限中です。数分待つか、Google AI Studioの制限設定を確認してください。\n※作成直後のキーは反映に数分かかることがあります。");
+                            alert("AIエラー(429): 利用制限中です。数分待つか、Google AI Studioの制限設定を確認してください。");
                         } else {
                             alert("AIエラーが発生しました: " + err.message);
                         }
