@@ -2083,18 +2083,29 @@ app.post("/login", async (c) => {
     return c.json({ success: false, message: "\u30D1\u30B9\u30EF\u30FC\u30C9\u304C\u9055\u3044\u307E\u3059" }, 401);
   }
 });
-app.get("/my-issues", async (c) => {
+app.get("/list-issues", async (c) => {
+  const filter = c.req.query("filter") || "all";
   const user_hash = c.req.query("user_hash");
-  if (!user_hash)
-    return c.json({ message: "user_hash is required" }, 400);
-  const { results } = await c.env.DB.prepare(`
+  let query = `
     SELECT issues.*, users.user_hash 
     FROM issues 
     JOIN users ON issues.requester_id = users.id
-    WHERE users.user_hash = ?
-    ORDER BY created_at DESC
-  `).bind(user_hash).all();
+  `;
+  let params = [];
+  if (filter === "mine" && user_hash) {
+    query += " WHERE users.user_hash = ?";
+    params.push(user_hash);
+  }
+  query += " ORDER BY created_at DESC";
+  const { results } = await c.env.DB.prepare(query).bind(...params).all();
   return c.json(results);
+});
+app.post("/update-issue-status", async (c) => {
+  const { id, status } = await c.req.json();
+  await c.env.DB.prepare(
+    "UPDATE issues SET status = ? WHERE id = ?"
+  ).bind(status, id).run();
+  return c.json({ success: true, message: `\u30B9\u30C6\u30FC\u30BF\u30B9\u3092 ${status} \u306B\u66F4\u65B0\u3057\u307E\u3057\u305F` });
 });
 app.post("/post-issue", async (c) => {
   const { title, description, user_hash } = await c.req.json();
@@ -2108,15 +2119,6 @@ app.post("/post-issue", async (c) => {
     "INSERT INTO issues (requester_id, title, description) VALUES (?, ?, ?)"
   ).bind(user.id, title, description).run();
   return c.json({ success: true, message: "\u6295\u7A3F\u5B8C\u4E86\u3057\u307E\u3057\u305F\uFF01" });
-});
-app.get("/list-issues", async (c) => {
-  const { results } = await c.env.DB.prepare(`
-    SELECT issues.*, users.user_hash 
-    FROM issues 
-    JOIN users ON issues.requester_id = users.id
-    ORDER BY created_at DESC
-  `).all();
-  return c.json(results);
 });
 var onRequest = handle(app);
 var routes = [

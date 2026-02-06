@@ -12,8 +12,10 @@ classDiagram
     class Hono_API_Handler ["APIサーバー（Hono）"] {
         <<Cloudflare Pages Functions>>
         +basePath: /api
-        +GET /list-issues 一覧取得API
+        +GET /list-issues 一覧取得(filter/user_hash)
         +POST /post-issue 投稿受付API
+        +POST /update-issue-status ステータス更新API
+        +POST /login 認証API
     }
 
     class Gemini_API ["Gemini API"] {

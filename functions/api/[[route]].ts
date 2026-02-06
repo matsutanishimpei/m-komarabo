@@ -42,20 +42,38 @@ app.post('/login', async (c) => {
   }
 })
 
-// 自分の投稿一覧（ダッシュボード用）を取得 -> /api/my-issues?user_hash=...
-app.get('/my-issues', async (c) => {
+// 悩み事の一覧取得（フィルター対応） -> /api/list-issues?filter=all|mine&user_hash=...
+app.get('/list-issues', async (c) => {
+  const filter = c.req.query('filter') || 'all'
   const user_hash = c.req.query('user_hash')
-  if (!user_hash) return c.json({ message: 'user_hash is required' }, 400)
 
-  const { results } = await c.env.DB.prepare(`
+  let query = `
     SELECT issues.*, users.user_hash 
     FROM issues 
     JOIN users ON issues.requester_id = users.id
-    WHERE users.user_hash = ?
-    ORDER BY created_at DESC
-  `).bind(user_hash).all()
+  `
+  let params: any[] = []
 
+  if (filter === 'mine' && user_hash) {
+    query += ' WHERE users.user_hash = ?'
+    params.push(user_hash)
+  }
+
+  query += ' ORDER BY created_at DESC'
+
+  const { results } = await c.env.DB.prepare(query).bind(...params).all()
   return c.json(results)
+})
+
+// ステータス更新API
+app.post('/update-issue-status', async (c) => {
+  const { id, status } = await c.req.json()
+
+  await c.env.DB.prepare(
+    'UPDATE issues SET status = ? WHERE id = ?'
+  ).bind(status, id).run()
+
+  return c.json({ success: true, message: `ステータスを ${status} に更新しました` })
 })
 
 // 悩み事を投稿するAPI -> パスは /api/post-issue になる
@@ -77,17 +95,6 @@ app.post('/post-issue', async (c) => {
   ).bind(user.id, title, description).run()
 
   return c.json({ success: true, message: '投稿完了しました！' })
-})
-
-// 悩み事の一覧取得 -> パスは /api/list-issues になる
-app.get('/list-issues', async (c) => {
-  const { results } = await c.env.DB.prepare(`
-    SELECT issues.*, users.user_hash 
-    FROM issues 
-    JOIN users ON issues.requester_id = users.id
-    ORDER BY created_at DESC
-  `).all()
-  return c.json(results)
 })
 
 export const onRequest = handle(app)

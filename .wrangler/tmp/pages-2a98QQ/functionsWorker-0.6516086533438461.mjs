@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// ../.wrangler/tmp/bundle-P8eKUc/strip-cf-connecting-ip-header.js
+// ../.wrangler/tmp/bundle-l4GyCL/strip-cf-connecting-ip-header.js
 function stripCfConnectingIPHeader(input, init) {
   const request = new Request(input, init);
   request.headers.delete("CF-Connecting-IP");
@@ -2095,18 +2095,29 @@ app.post("/login", async (c) => {
     return c.json({ success: false, message: "\u30D1\u30B9\u30EF\u30FC\u30C9\u304C\u9055\u3044\u307E\u3059" }, 401);
   }
 });
-app.get("/my-issues", async (c) => {
+app.get("/list-issues", async (c) => {
+  const filter = c.req.query("filter") || "all";
   const user_hash = c.req.query("user_hash");
-  if (!user_hash)
-    return c.json({ message: "user_hash is required" }, 400);
-  const { results } = await c.env.DB.prepare(`
+  let query = `
     SELECT issues.*, users.user_hash 
     FROM issues 
     JOIN users ON issues.requester_id = users.id
-    WHERE users.user_hash = ?
-    ORDER BY created_at DESC
-  `).bind(user_hash).all();
+  `;
+  let params = [];
+  if (filter === "mine" && user_hash) {
+    query += " WHERE users.user_hash = ?";
+    params.push(user_hash);
+  }
+  query += " ORDER BY created_at DESC";
+  const { results } = await c.env.DB.prepare(query).bind(...params).all();
   return c.json(results);
+});
+app.post("/update-issue-status", async (c) => {
+  const { id, status } = await c.req.json();
+  await c.env.DB.prepare(
+    "UPDATE issues SET status = ? WHERE id = ?"
+  ).bind(status, id).run();
+  return c.json({ success: true, message: `\u30B9\u30C6\u30FC\u30BF\u30B9\u3092 ${status} \u306B\u66F4\u65B0\u3057\u307E\u3057\u305F` });
 });
 app.post("/post-issue", async (c) => {
   const { title, description, user_hash } = await c.req.json();
@@ -2120,15 +2131,6 @@ app.post("/post-issue", async (c) => {
     "INSERT INTO issues (requester_id, title, description) VALUES (?, ?, ?)"
   ).bind(user.id, title, description).run();
   return c.json({ success: true, message: "\u6295\u7A3F\u5B8C\u4E86\u3057\u307E\u3057\u305F\uFF01" });
-});
-app.get("/list-issues", async (c) => {
-  const { results } = await c.env.DB.prepare(`
-    SELECT issues.*, users.user_hash 
-    FROM issues 
-    JOIN users ON issues.requester_id = users.id
-    ORDER BY created_at DESC
-  `).all();
-  return c.json(results);
 });
 var onRequest = handle(app);
 
@@ -2630,7 +2632,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-P8eKUc/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-l4GyCL/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -2662,7 +2664,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-P8eKUc/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-l4GyCL/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

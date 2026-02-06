@@ -27,18 +27,27 @@
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 困りごとラボ</h1>
+
+            <!-- Mode Switcher -->
+            <div class="flex bg-slate-200 p-1 rounded-xl">
+                <button id="btn-requester" onclick="switchMode('requester')"
+                    class="px-4 py-2 rounded-lg text-sm font-bold transition">相談者モード</button>
+                <button id="btn-developer" onclick="switchMode('developer')"
+                    class="px-4 py-2 rounded-lg text-sm font-bold transition">開発者モード</button>
+            </div>
+
             <div class="flex items-center gap-4 text-sm">
-                <span class="text-slate-500">ログイン中: <strong id="display_user_hash"
+                <span class="text-slate-500 hidden md:inline">ログイン中: <strong id="display_user_hash"
                         class="text-slate-800"></strong></span>
                 <button onclick="logout()"
-                    class="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 transition text-slate-700 font-medium">ログアウト</button>
+                    class="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 transition text-slate-700 font-medium text-xs">ログアウト</button>
             </div>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-6">
-        <!-- New Issue Section -->
-        <section class="mb-12">
+        <!-- New Issue Section (Only in Requester Mode) -->
+        <section id="section-new-issue" class="mb-12">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
                 <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                     <span
@@ -72,52 +81,55 @@
             </div>
         </section>
 
-        <!-- Kanban Dashboard -->
-        <section>
-            <h3 class="text-2xl font-bold text-slate-800 mb-8">マイ・ダッシュボード</h3>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Dashboard / List View -->
+        <section id="section-dashboard">
+            <h3 id="dashboard-title" class="text-2xl font-bold text-slate-800 mb-8">マイ・ダッシュボード</h3>
 
+            <!-- Requester View (Kanban) -->
+            <div id="view-requester" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Open -->
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center justify-between px-2">
-                        <h4 class="font-bold text-slate-500 flex items-center gap-2">
+                        <h4 class="font-bold text-slate-500 flex items-center gap-2 text-sm uppercase tracking-wider">
                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            受付中（未着手）
+                            受付中
                         </h4>
                         <span id="count-open"
                             class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </div>
-                    <div id="list-open" class="flex flex-col gap-4 min-h-[200px] p-2 bg-slate-100/50 rounded-2xl"></div>
+                    <div id="list-open" class="flex flex-col gap-4 min-h-[150px] p-2 bg-slate-100/50 rounded-2xl"></div>
                 </div>
-
                 <!-- Progress -->
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center justify-between px-2">
-                        <h4 class="font-bold text-slate-500 flex items-center gap-2">
+                        <h4 class="font-bold text-slate-500 flex items-center gap-2 text-sm uppercase tracking-wider">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            解決に向けて進行中
+                            進行中
                         </h4>
                         <span id="count-progress"
                             class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </div>
-                    <div id="list-progress" class="flex flex-col gap-4 min-h-[200px] p-2 bg-slate-100/50 rounded-2xl">
+                    <div id="list-progress" class="flex flex-col gap-4 min-h-[150px] p-2 bg-slate-100/50 rounded-2xl">
                     </div>
                 </div>
-
                 <!-- Closed -->
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center justify-between px-2">
-                        <h4 class="font-bold text-slate-500 flex items-center gap-2">
+                        <h4 class="font-bold text-slate-500 flex items-center gap-2 text-sm uppercase tracking-wider">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             解決済み
                         </h4>
                         <span id="count-closed"
                             class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </div>
-                    <div id="list-closed" class="flex flex-col gap-4 min-h-[200px] p-2 bg-slate-100/50 rounded-2xl">
+                    <div id="list-closed" class="flex flex-col gap-4 min-h-[150px] p-2 bg-slate-100/50 rounded-2xl">
                     </div>
                 </div>
+            </div>
 
+            <!-- Developer View (List) -->
+            <div id="view-developer" class="hidden">
+                <div id="list-developer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </section>
     </main>
@@ -140,6 +152,8 @@
             location.href = 'login.html';
         }
 
+        let currentMode = 'requester';
+
         // UIの初期化
         document.getElementById('display_user_hash').innerText = currentUserHash;
 
@@ -150,38 +164,118 @@
         }
         window.logout = logout;
 
+        function switchMode(mode) {
+            currentMode = mode;
+            const btnReq = document.getElementById('btn-requester');
+            const btnDev = document.getElementById('btn-developer');
+            const sectionNew = document.getElementById('section-new-issue');
+            const viewReq = document.getElementById('view-requester');
+            const viewDev = document.getElementById('view-developer');
+            const title = document.getElementById('dashboard-title');
+
+            if (mode === 'requester') {
+                btnReq.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                btnDev.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                sectionNew.classList.remove('hidden');
+                viewReq.classList.remove('hidden');
+                viewDev.classList.add('hidden');
+                title.innerText = 'マイ・ダッシュボード';
+            } else {
+                btnDev.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                btnReq.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                sectionNew.classList.add('hidden');
+                viewReq.classList.add('hidden');
+                viewDev.classList.remove('hidden');
+                title.innerText = '未解決の困りごと一覧（開発者向け）';
+            }
+            fetchIssues();
+        }
+        window.switchMode = switchMode;
+
         async function fetchIssues() {
             try {
-                const res = await fetch(`/api/my-issues?user_hash=${currentUserHash}`);
+                const endpoint = currentMode === 'requester'
+                    ? `/api/list-issues?filter=mine&user_hash=${currentUserHash}`
+                    : `/api/list-issues?filter=all`;
+
+                const res = await fetch(endpoint);
                 const data = await res.json();
 
-                const openList = document.getElementById('list-open');
-                const progressList = document.getElementById('list-progress');
-                const closedList = document.getElementById('list-closed');
-
-                const renderItem = (i) => `
-                    <a href="detail.html?id=${i.id}" class="block bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition group">
-                        <h5 class="font-bold text-slate-800 group-hover:text-blue-600 transition truncate">${i.title}</h5>
-                        <p class="text-xs text-slate-400 mt-2">${new Date(i.created_at).toLocaleDateString()}</p>
-                    </a>
-                `;
-
-                const openItems = data.filter(i => (i.status || 'open') === 'open');
-                const progressItems = data.filter(i => i.status === 'progress');
-                const closedItems = data.filter(i => i.status === 'closed');
-
-                openList.innerHTML = openItems.map(renderItem).join('') || `<p class="text-xs text-slate-400 text-center py-10 italic">表示する項目がありません</p>`;
-                progressList.innerHTML = progressItems.map(renderItem).join('') || `<p class="text-xs text-slate-400 text-center py-10 italic">表示する項目がありません</p>`;
-                closedList.innerHTML = closedItems.map(renderItem).join('') || `<p class="text-xs text-slate-400 text-center py-10 italic">表示する項目がありません</p>`;
-
-                document.getElementById('count-open').innerText = openItems.length;
-                document.getElementById('count-progress').innerText = progressItems.length;
-                document.getElementById('count-closed').innerText = closedItems.length;
-
+                if (currentMode === 'requester') {
+                    renderRequester(data);
+                } else {
+                    renderDeveloper(data);
+                }
             } catch (err) {
                 console.error("Fetch Error:", err);
             }
         }
+
+        function renderRequester(data) {
+            const openList = document.getElementById('list-open');
+            const progressList = document.getElementById('list-progress');
+            const closedList = document.getElementById('list-closed');
+
+            const renderItem = (i) => `
+                <a href="detail.html?id=${i.id}" class="block bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition group">
+                    <h5 class="font-bold text-slate-800 group-hover:text-blue-600 transition truncate">${i.title}</h5>
+                    <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-tighter">${new Date(i.created_at).toLocaleDateString()}</p>
+                </a>
+            `;
+
+            const openItems = data.filter(i => (i.status || 'open') === 'open');
+            const progressItems = data.filter(i => i.status === 'progress');
+            const closedItems = data.filter(i => i.status === 'closed');
+
+            openList.innerHTML = openItems.map(renderItem).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
+            progressList.innerHTML = progressItems.map(renderItem).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
+            closedList.innerHTML = closedItems.map(renderItem).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
+
+            document.getElementById('count-open').innerText = openItems.length;
+            document.getElementById('count-progress').innerText = progressItems.length;
+            document.getElementById('count-closed').innerText = closedItems.length;
+        }
+
+        function renderDeveloper(data) {
+            const list = document.getElementById('list-developer');
+            // 開発者モードでは全ユーザーの 'open' な課題のみ表示（自分のも含むが基本は他人の助け）
+            const openItems = data.filter(i => (i.status || 'open') === 'open');
+
+            list.innerHTML = openItems.map(i => `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:border-blue-200 transition">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded">NEW</span>
+                            <span class="text-[10px] text-slate-400 font-medium">${i.user_hash}</span>
+                        </div>
+                        <h5 class="text-lg font-bold text-slate-800 mb-2">${i.title}</h5>
+                        <p class="text-sm text-slate-500 line-clamp-3 mb-6">${i.description}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="detail.html?id=${i.id}" class="flex-1 text-center py-2 text-xs font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">詳細</a>
+                        <button onclick="takeIssue(${i.id})" class="flex-[2] py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md shadow-blue-100 transition">着手する</button>
+                    </div>
+                </div>
+            `).join('') || `<div class="col-span-full py-20 text-center text-slate-400 italic">現在解決を待っている課題はありません</div>`;
+        }
+
+        async function takeIssue(id) {
+            if (!confirm('この課題に着手しますか？')) return;
+            try {
+                const res = await fetch('/api/update-issue-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, status: 'progress' })
+                });
+                if (res.ok) {
+                    alert('着手しました！相談者モードの進行中エリアで確認できます。');
+                    fetchIssues();
+                }
+            } catch (err) {
+                alert('エラーが発生しました');
+            }
+        }
+        window.takeIssue = takeIssue;
 
         async function postIssue() {
             const apiKey = document.getElementById('gemini_api_key').value.trim();
@@ -231,7 +325,9 @@
         }
 
         window.postIssue = postIssue;
-        fetchIssues();
+
+        // デフォルトで相談者モード
+        switchMode('requester');
     </script>
 </body>
 
