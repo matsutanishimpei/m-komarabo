@@ -85,7 +85,7 @@
         }
 
         async function postIssue() {
-            const apiKey = document.getElementById('gemini_api_key').value;
+            const apiKey = document.getElementById('gemini_api_key').value.trim();
             const title = document.getElementById('title').value;
             const description = document.getElementById('description').value;
             const user_hash = document.getElementById('user_hash').value;
@@ -105,7 +105,8 @@
             if (apiKey) {
                 try {
                     const genAI = new GoogleGenerativeAI(apiKey);
-                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                    // 1.5-flashが404になる環境への対策として 2.0-flash を使用
+                    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
                     const prompt = `ユーザーから以下の『困りごと』が投稿されました。これに対して、共感するような短い一言（30文字以内）を返してください。
                     タイトル: ${title}
@@ -117,7 +118,12 @@
                         const text = response.text();
                         alert("AIからのコメント: " + text);
                     }).catch(err => {
-                        console.error("Gemini API Error:", err);
+                        console.error("Gemini API Error details:", err);
+                        if (err.message && err.message.includes("404")) {
+                            alert("AIコメント取得エラー: モデルが見つかりませんでした(404)。APIキーの設定や、Google AI StudioでGemini 2.0が利用可能か確認してください。");
+                        } else {
+                            alert("AIコメント取得中にエラーが発生しました。詳細はコンソールを確認してください。");
+                        }
                     });
                 } catch (err) {
                     console.error("Gemini Setup Error:", err);
