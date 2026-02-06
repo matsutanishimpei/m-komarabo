@@ -47,7 +47,12 @@
 </head>
 
 <body>
-    <h1>困りごとラボ <button onclick="logout()" style="float: right; font-size: 14px; background: #666;">ログアウト</button></h1>
+    <h1>困りごとラボ
+        <span style="float: right; font-size: 14px; font-weight: normal; margin-left: 10px;">
+            ログイン中: <strong id="display_user_hash"></strong>
+            <button onclick="logout()" style="margin-left: 10px; background: #666;">ログアウト</button>
+        </span>
+    </h1>
     <div class="card">
         <h3>新しい「困りごと」を投稿する</h3>
         <input type="password" id="gemini_api_key" placeholder="Gemini APIキー（AIコメントを受け取る場合は入力）">
@@ -86,6 +91,7 @@
             userHashInput.value = currentUserHash;
             userHashInput.disabled = true; // ログイン中は固定
         }
+        document.getElementById('display_user_hash').innerText = currentUserHash;
 
         function logout() {
             localStorage.removeItem('user_hash');
