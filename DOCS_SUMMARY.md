@@ -19,9 +19,17 @@
 
 ## 2. 実装済み機能
 
-### 🔐 認証システム
-- **パスワード認証**: SHA-256（Web Crypto API）によるクライアント/サーバー両面でのハッシュ化。
-- **セッション管理**: `localStorage` を使用した簡易セッション管理（`user_hash` と `auth_token` の保持）。
+### 🔐 認証システム（二重ハッシュ化プロトコル）
+本プロジェクトでは、セキュリティ向上のためクライアントとサーバーの両方でハッシュ化を行うプロトコルを採用しています。
+
+1.  **Client-Side Hashing**: 
+    - ブラウザ上で入力された生パスワードを `SHA-256` で1回ハッシュ化します。
+    - これにより、通信経路（HTTPS下でも）に生パスワードが流れるのを防ぎます。
+2.  **Server-Side Hashing**:
+    - 受信したハッシュ値を、Hono側でさらに `SHA-256` でハッシュ化します。
+    - データベースにはこの「二重ハッシュ化」された値が `password_hash` として保存されます。
+    - 万が一データベースが流出しても、生パスワードの復元を極めて困難にします。
+- **セッション管理**: `localStorage` を使用した簡易保持（`user_hash` 等）。
 - **ログインガード**: 未ログインユーザーを `login.html` へ自動リダイレクト。
 
 ### 🏠 相談者モード（デフォルト）
@@ -45,10 +53,10 @@ erDiagram
     USERS {
         integer id PK "ID"
         text user_hash UK "ユーザー識別ハッシュ"
-        text password_hash "パスワードハッシュ"
-        text role "役割(requester/developer)"
-        integer total_score "合計スコア"
-        datetime created_at "作成日時"
+        text password_hash "二重ハッシュ値 / NULL可"
+        text role "役割 / DEFAULT 'requester'"
+        integer total_score "合計スコア / DEFAULT 0"
+        datetime created_at "作成日時 / DEFAULT CURRENT_TIMESTAMP"
     }
 
     ISSUES {
@@ -56,17 +64,17 @@ erDiagram
         integer requester_id FK "依頼者ID"
         text title "困りごと題名"
         text description "詳細内容"
-        text status "ステータス(open/progress/closed)"
-        text github_url "GitHub連携URL"
-        integer developer_id FK "着手開発者ID"
-        datetime created_at "投稿日時"
+        text status "ステータス / DEFAULT 'open'"
+        text github_url "GitHub連携URL / NULL可"
+        integer developer_id FK "着手開発者ID / NULL可"
+        datetime created_at "投稿日時 / DEFAULT CURRENT_TIMESTAMP"
     }
 
     CERTIFICATES {
         integer id PK "ID"
         integer issue_id FK "困りごとID"
         integer developer_id FK "開発者ID"
-        text verification_key "検証キー"
+        text verification_key "検証キー / UNIQUE"
         integer valuation_score "評価数"
     }
 
@@ -75,7 +83,7 @@ erDiagram
         integer issue_id FK "困りごとID"
         integer user_id FK "投稿者ID"
         text content "コメント内容"
-        datetime created_at "投稿日時"
+        datetime created_at "投稿日時 / DEFAULT CURRENT_TIMESTAMP"
     }
 
     USERS ||--o{ ISSUES : "作成"
