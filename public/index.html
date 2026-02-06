@@ -5,67 +5,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>困りごとラボ 〜街の課題の試作室〜</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;400;700&display=swap');
+
         body {
-            font-family: sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f4f7f6;
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
         }
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        input,
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            box-sizing: border-box;
-        }
-
-        button {
-            background: #0070f3;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .issue {
-            border-bottom: 1px solid #eee;
-            padding: 10px 0;
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
 
-<body>
-    <h1>困りごとラボ
-        <span style="float: right; font-size: 14px; font-weight: normal; margin-left: 10px;">
-            ログイン中: <strong id="display_user_hash"></strong>
-            <button onclick="logout()" style="margin-left: 10px; background: #666;">ログアウト</button>
-        </span>
-    </h1>
-    <div class="card">
-        <h3>新しい「困りごと」を投稿する</h3>
-        <input type="password" id="gemini_api_key" placeholder="Gemini APIキー（AIコメントを受け取る場合は入力）">
-        <input type="text" id="user_hash" placeholder="あなたの識別名（例: 名前やニックネーム）">
-        <input type="text" id="title" placeholder="困りごとのタイトル">
-        <textarea id="description" rows="4" placeholder="具体的な内容を教えてください"></textarea>
-        <button onclick="postIssue()">投稿する</button>
-    </div>
+<body class="bg-slate-50 min-h-screen pb-20">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass px-6 py-4 mb-8">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                困りごとラボ</h1>
+            <div class="flex items-center gap-4 text-sm">
+                <span class="text-slate-500">ログイン中: <strong id="display_user_hash"
+                        class="text-slate-800"></strong></span>
+                <button onclick="logout()"
+                    class="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 transition text-slate-700 font-medium">ログアウト</button>
+            </div>
+        </div>
+    </header>
 
-    <div class="card">
-        <h3>受付中の困りごと一覧</h3>
-        <div id="issue-list">読み込み中...</div>
-    </div>
+    <main class="max-w-6xl mx-auto px-6">
+        <!-- New Issue Section -->
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span
+                        class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">＋</span>
+                    新しい「困りごと」を投稿する
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Gemini API
+                            Key (Optional)</label>
+                        <input type="password" id="gemini_api_key" placeholder="AIコメントを受け取る場合は入力"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Issue
+                            Title</label>
+                        <input type="text" id="title" placeholder="何にお困りですか？"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label
+                            class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
+                        <textarea id="description" rows="3" placeholder="具体的な状況や、どうなってほしいかを教えてください"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="postIssue()"
+                        class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-200">投稿する</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kanban Dashboard -->
+        <section>
+            <h3 class="text-2xl font-bold text-slate-800 mb-8">マイ・ダッシュボード</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <!-- Open -->
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h4 class="font-bold text-slate-500 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            受付中（未着手）
+                        </h4>
+                        <span id="count-open"
+                            class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="list-open" class="flex flex-col gap-4 min-h-[200px] p-2 bg-slate-100/50 rounded-2xl"></div>
+                </div>
+
+                <!-- Progress -->
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h4 class="font-bold text-slate-500 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            解決に向けて進行中
+                        </h4>
+                        <span id="count-progress"
+                            class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="list-progress" class="flex flex-col gap-4 min-h-[200px] p-2 bg-slate-100/50 rounded-2xl">
+                    </div>
+                </div>
+
+                <!-- Closed -->
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h4 class="font-bold text-slate-500 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            解決済み
+                        </h4>
+                        <span id="count-closed"
+                            class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="list-closed" class="flex flex-col gap-4 min-h-[200px] p-2 bg-slate-100/50 rounded-2xl">
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
 
     <script type="importmap">
         {
@@ -86,11 +141,6 @@
         }
 
         // UIの初期化
-        const userHashInput = document.getElementById('user_hash');
-        if (userHashInput) {
-            userHashInput.value = currentUserHash;
-            userHashInput.disabled = true; // ログイン中は固定
-        }
         document.getElementById('display_user_hash').innerText = currentUserHash;
 
         function logout() {
@@ -98,34 +148,53 @@
             localStorage.removeItem('auth_token');
             location.href = 'login.html';
         }
-        window.logout = logout; // グローバルに公開
+        window.logout = logout;
 
         async function fetchIssues() {
-            const res = await fetch('/api/list-issues');
-            const data = await res.json();
-            const list = document.getElementById('issue-list');
-            list.innerHTML = data.map(i => `
-                <div class="issue">
-                    <strong>${i.title}</strong> <small>(${i.user_hash})</small> - [${i.status || 'open'}]
-                    <p>${i.description}</p>
-                </div>
-            `).join('') || 'まだ投稿がありません';
+            try {
+                const res = await fetch(`/api/my-issues?user_hash=${currentUserHash}`);
+                const data = await res.json();
+
+                const openList = document.getElementById('list-open');
+                const progressList = document.getElementById('list-progress');
+                const closedList = document.getElementById('list-closed');
+
+                const renderItem = (i) => `
+                    <a href="detail.html?id=${i.id}" class="block bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition group">
+                        <h5 class="font-bold text-slate-800 group-hover:text-blue-600 transition truncate">${i.title}</h5>
+                        <p class="text-xs text-slate-400 mt-2">${new Date(i.created_at).toLocaleDateString()}</p>
+                    </a>
+                `;
+
+                const openItems = data.filter(i => (i.status || 'open') === 'open');
+                const progressItems = data.filter(i => i.status === 'progress');
+                const closedItems = data.filter(i => i.status === 'closed');
+
+                openList.innerHTML = openItems.map(renderItem).join('') || `<p class="text-xs text-slate-400 text-center py-10 italic">表示する項目がありません</p>`;
+                progressList.innerHTML = progressItems.map(renderItem).join('') || `<p class="text-xs text-slate-400 text-center py-10 italic">表示する項目がありません</p>`;
+                closedList.innerHTML = closedItems.map(renderItem).join('') || `<p class="text-xs text-slate-400 text-center py-10 italic">表示する項目がありません</p>`;
+
+                document.getElementById('count-open').innerText = openItems.length;
+                document.getElementById('count-progress').innerText = progressItems.length;
+                document.getElementById('count-closed').innerText = closedItems.length;
+
+            } catch (err) {
+                console.error("Fetch Error:", err);
+            }
         }
 
         async function postIssue() {
             const apiKey = document.getElementById('gemini_api_key').value.trim();
             const title = document.getElementById('title').value;
             const description = document.getElementById('description').value;
-            const user_hash = currentUserHash; // ログイン中のユーザーを使用
 
             if (!title || !description) {
                 alert('タイトルと内容を入力してください');
                 return;
             }
 
-            const payload = { user_hash, title, description };
+            const payload = { user_hash: currentUserHash, title, description };
 
-            // 1. 先に投稿処理を実行（非同期）
             const postPromise = fetch('/api/post-issue', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -138,34 +207,14 @@
                 fetchIssues();
             });
 
-            // 2. Gemini APIキーがある場合はAI連携
             if (apiKey) {
                 try {
                     const genAI = new GoogleGenerativeAI(apiKey);
-                    const model = genAI.getGenerativeModel(
-                        { model: "gemini-2.5-flash" },
-                        { apiVersion: "v1beta" }
-                    );
-
-                    const prompt = `ユーザーから以下の『困りごと』が投稿されました。これに対して、共感するような短い一言（30文字以内）を返してください。
-                    タイトル: ${title}
-                    内容: ${description}`;
-
+                    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }, { apiVersion: "v1beta" });
+                    const prompt = `ユーザーから以下の『困りごと』が投稿されました。これに対して、共感するような短い一言（30文字以内）を返してください。\nタイトル: ${title}\n内容: ${description}`;
                     model.generateContent(prompt).then(result => {
-                        const response = result.response;
-                        const text = response.text();
-                        alert("AIからのコメント: " + text);
-                    }).catch(err => {
-                        console.error("Gemini API Error details:", err);
-                        const msg = err.message || "";
-                        if (msg.includes("404")) {
-                            alert("AIエラー(404): モデル名またはAPIバージョンが認識されませんでした。");
-                        } else if (msg.includes("429")) {
-                            alert("AIエラー(429): リクエスト制限（Quota）を超過しました。");
-                        } else {
-                            alert("AIエラー: " + msg);
-                        }
-                    });
+                        alert("AIからのコメント: " + result.response.text());
+                    }).catch(err => console.error("Gemini Error:", err));
                 } catch (err) {
                     console.error("Gemini Setup Error:", err);
                 }
@@ -181,7 +230,6 @@
             }
         }
 
-        // 初期化時にグローバルに公開
         window.postIssue = postIssue;
         fetchIssues();
     </script>

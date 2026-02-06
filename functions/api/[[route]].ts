@@ -42,10 +42,26 @@ app.post('/login', async (c) => {
   }
 })
 
+// 自分の投稿一覧（ダッシュボード用）を取得 -> /api/my-issues?user_hash=...
+app.get('/my-issues', async (c) => {
+  const user_hash = c.req.query('user_hash')
+  if (!user_hash) return c.json({ message: 'user_hash is required' }, 400)
+
+  const { results } = await c.env.DB.prepare(`
+    SELECT issues.*, users.user_hash 
+    FROM issues 
+    JOIN users ON issues.requester_id = users.id
+    WHERE users.user_hash = ?
+    ORDER BY created_at DESC
+  `).bind(user_hash).all()
+
+  return c.json(results)
+})
+
 // 悩み事を投稿するAPI -> パスは /api/post-issue になる
 app.post('/post-issue', async (c) => {
   const { title, description, user_hash } = await c.req.json()
-  
+
   // D1への保存ロジック（そのまま）
   // ユーザーはログイン済みである前提
   const user = await c.env.DB.prepare(

@@ -14,7 +14,7 @@ erDiagram
         integer requester_id FK "依頼者ID"
         text title "困りごと題名"
         text description "詳細内容"
-        text status "ステータス(デフォルト open)"
+        text status "ステータス(open/progress/closed)"
         text github_url "GitHub連携URL"
         datetime created_at "投稿日時"
     }

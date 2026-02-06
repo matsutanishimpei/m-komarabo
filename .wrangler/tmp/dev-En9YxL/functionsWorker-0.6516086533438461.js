@@ -2083,6 +2083,19 @@ app.post("/login", async (c) => {
     return c.json({ success: false, message: "\u30D1\u30B9\u30EF\u30FC\u30C9\u304C\u9055\u3044\u307E\u3059" }, 401);
   }
 });
+app.get("/my-issues", async (c) => {
+  const user_hash = c.req.query("user_hash");
+  if (!user_hash)
+    return c.json({ message: "user_hash is required" }, 400);
+  const { results } = await c.env.DB.prepare(`
+    SELECT issues.*, users.user_hash 
+    FROM issues 
+    JOIN users ON issues.requester_id = users.id
+    WHERE users.user_hash = ?
+    ORDER BY created_at DESC
+  `).bind(user_hash).all();
+  return c.json(results);
+});
 app.post("/post-issue", async (c) => {
   const { title, description, user_hash } = await c.req.json();
   const user = await c.env.DB.prepare(
