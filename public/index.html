@@ -105,10 +105,9 @@
             if (apiKey) {
                 try {
                     const genAI = new GoogleGenerativeAI(apiKey);
-                    // 最新の gemini-2.0-flash を v1beta API で呼び出します
-                    // (2.5-flash 等、最新モデルは v1beta で提供されていることが多いです)
+                    // ユーザー環境で動作確認（429応答）が取れた gemini-2.5-flash を使用します
                     const model = genAI.getGenerativeModel(
-                        { model: "gemini-2.0-flash" },
+                        { model: "gemini-2.5-flash" },
                         { apiVersion: "v1beta" }
                     );
 
