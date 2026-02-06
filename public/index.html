@@ -1,21 +1,56 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>困りごとラボ 〜街の課題の試作室〜</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
-        button { background: #0070f3; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .issue { border-bottom: 1px solid #eee; padding: 10px 0; }
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f4f7f6;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .issue {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
     </style>
 </head>
+
 <body>
     <h1>困りごとラボ</h1>
     <div class="card">
         <h3>新しい「困りごと」を投稿する</h3>
+        <input type="password" id="gemini_api_key" placeholder="Gemini APIキー（AIコメントを受け取る場合は入力）">
         <input type="text" id="user_hash" placeholder="あなたの識別名（例: 名前やニックネーム）">
         <input type="text" id="title" placeholder="困りごとのタイトル">
         <textarea id="description" rows="4" placeholder="具体的な内容を教えてください"></textarea>
@@ -27,7 +62,16 @@
         <div id="issue-list">読み込み中...</div>
     </div>
 
-    <script>
+    <script type="importmap">
+        {
+          "imports": {
+            "@google/generative-ai": "https://esm.run/@google/generative-ai"
+          }
+        }
+    </script>
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
         async function fetchIssues() {
             const res = await fetch('/api/list-issues');
             const data = await res.json();
@@ -41,21 +85,53 @@
         }
 
         async function postIssue() {
-            const payload = {
-                user_hash: document.getElementById('user_hash').value,
-                title: document.getElementById('title').value,
-                description: document.getElementById('description').value
-            };
-            await fetch('/api/post-issue', {
+            const apiKey = document.getElementById('gemini_api_key').value;
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const user_hash = document.getElementById('user_hash').value;
+
+            const payload = { user_hash, title, description };
+
+            // 1. 先に投稿処理を実行（非同期）
+            const postPromise = fetch('/api/post-issue', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
+            }).then(() => {
+                fetchIssues();
             });
+
+            // 2. Gemini APIキーがある場合はAI連携
+            if (apiKey) {
+                try {
+                    const genAI = new GoogleGenerativeAI(apiKey);
+                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                    const prompt = `ユーザーから以下の『困りごと』が投稿されました。これに対して、共感するような短い一言（30文字以内）を返してください。
+                    タイトル: ${title}
+                    内容: ${description}`;
+
+                    // 非同期で実行し、結果が出次第アラートを出す
+                    model.generateContent(prompt).then(result => {
+                        const response = result.response;
+                        const text = response.text();
+                        alert("AIからのコメント: " + text);
+                    }).catch(err => {
+                        console.error("Gemini API Error:", err);
+                    });
+                } catch (err) {
+                    console.error("Gemini Setup Error:", err);
+                }
+            }
+
+            await postPromise;
             alert('投稿しました！');
-            fetchIssues();
         }
 
+        // 初期化時にグローバルに公開（HTMLのonclickから呼べるようにするため）
+        window.postIssue = postIssue;
         fetchIssues();
     </script>
 </body>
+
 </html>
