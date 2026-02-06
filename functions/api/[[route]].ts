@@ -8,18 +8,53 @@ type Bindings = {
 // パスを /api に限定
 const app = new Hono<{ Bindings: Bindings }>().basePath('/api')
 
+// パスワードをハッシュ化するユーティリティ
+async function hashPassword(password: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+// ログイン・登録API
+app.post('/login', async (c) => {
+  const { user_hash, password } = await c.req.json()
+  const password_hash = await hashPassword(password)
+
+  // ユーザーの存在確認
+  const existingUser = await c.env.DB.prepare(
+    'SELECT * FROM users WHERE user_hash = ?'
+  ).bind(user_hash).first()
+
+  if (!existingUser) {
+    // 新規登録
+    await c.env.DB.prepare(
+      'INSERT INTO users (user_hash, password_hash, role) VALUES (?, ?, ?)'
+    ).bind(user_hash, password_hash, 'requester').run()
+    return c.json({ success: true, isNew: true, message: '新規登録・ログインしました' })
+  }
+
+  // 既存ユーザーの認証
+  if (existingUser.password_hash === password_hash) {
+    return c.json({ success: true, isNew: false, message: 'ログインしました' })
+  } else {
+    return c.json({ success: false, message: 'パスワードが違います' }, 401)
+  }
+})
+
 // 悩み事を投稿するAPI -> パスは /api/post-issue になる
 app.post('/post-issue', async (c) => {
   const { title, description, user_hash } = await c.req.json()
   
   // D1への保存ロジック（そのまま）
-  await c.env.DB.prepare(
-    'INSERT OR IGNORE INTO users (user_hash, role) VALUES (?, ?)'
-  ).bind(user_hash, 'requester').run()
-
+  // ユーザーはログイン済みである前提
   const user = await c.env.DB.prepare(
     'SELECT id FROM users WHERE user_hash = ?'
   ).bind(user_hash).first()
+
+  if (!user) {
+    return c.json({ success: false, message: 'ユーザーが見つかりません' }, 404)
+  }
 
   await c.env.DB.prepare(
     'INSERT INTO issues (requester_id, title, description) VALUES (?, ?, ?)'

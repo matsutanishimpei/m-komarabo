@@ -2057,14 +2057,40 @@ var handle = /* @__PURE__ */ __name2((app2) => (eventContext) => {
   );
 }, "handle");
 var app = new Hono2().basePath("/api");
+async function hashPassword(password) {
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(hashPassword, "hashPassword");
+__name2(hashPassword, "hashPassword");
+app.post("/login", async (c) => {
+  const { user_hash, password } = await c.req.json();
+  const password_hash = await hashPassword(password);
+  const existingUser = await c.env.DB.prepare(
+    "SELECT * FROM users WHERE user_hash = ?"
+  ).bind(user_hash).first();
+  if (!existingUser) {
+    await c.env.DB.prepare(
+      "INSERT INTO users (user_hash, password_hash, role) VALUES (?, ?, ?)"
+    ).bind(user_hash, password_hash, "requester").run();
+    return c.json({ success: true, isNew: true, message: "\u65B0\u898F\u767B\u9332\u30FB\u30ED\u30B0\u30A4\u30F3\u3057\u307E\u3057\u305F" });
+  }
+  if (existingUser.password_hash === password_hash) {
+    return c.json({ success: true, isNew: false, message: "\u30ED\u30B0\u30A4\u30F3\u3057\u307E\u3057\u305F" });
+  } else {
+    return c.json({ success: false, message: "\u30D1\u30B9\u30EF\u30FC\u30C9\u304C\u9055\u3044\u307E\u3059" }, 401);
+  }
+});
 app.post("/post-issue", async (c) => {
   const { title, description, user_hash } = await c.req.json();
-  await c.env.DB.prepare(
-    "INSERT OR IGNORE INTO users (user_hash, role) VALUES (?, ?)"
-  ).bind(user_hash, "requester").run();
   const user = await c.env.DB.prepare(
     "SELECT id FROM users WHERE user_hash = ?"
   ).bind(user_hash).first();
+  if (!user) {
+    return c.json({ success: false, message: "\u30E6\u30FC\u30B6\u30FC\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093" }, 404);
+  }
   await c.env.DB.prepare(
     "INSERT INTO issues (requester_id, title, description) VALUES (?, ?, ?)"
   ).bind(user.id, title, description).run();

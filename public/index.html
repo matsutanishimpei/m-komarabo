@@ -47,7 +47,7 @@
 </head>
 
 <body>
-    <h1>困りごとラボ</h1>
+    <h1>困りごとラボ <button onclick="logout()" style="float: right; font-size: 14px; background: #666;">ログアウト</button></h1>
     <div class="card">
         <h3>新しい「困りごと」を投稿する</h3>
         <input type="password" id="gemini_api_key" placeholder="Gemini APIキー（AIコメントを受け取る場合は入力）">
@@ -72,13 +72,35 @@
     <script type="module">
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
+        // ログインチェック
+        const currentUserHash = localStorage.getItem('user_hash');
+        const authToken = localStorage.getItem('auth_token');
+
+        if (!currentUserHash || !authToken) {
+            location.href = 'login.html';
+        }
+
+        // UIの初期化
+        const userHashInput = document.getElementById('user_hash');
+        if (userHashInput) {
+            userHashInput.value = currentUserHash;
+            userHashInput.disabled = true; // ログイン中は固定
+        }
+
+        function logout() {
+            localStorage.removeItem('user_hash');
+            localStorage.removeItem('auth_token');
+            location.href = 'login.html';
+        }
+        window.logout = logout; // グローバルに公開
+
         async function fetchIssues() {
             const res = await fetch('/api/list-issues');
             const data = await res.json();
             const list = document.getElementById('issue-list');
             list.innerHTML = data.map(i => `
                 <div class="issue">
-                    <strong>${i.title}</strong> <small>(${i.user_hash})</small>
+                    <strong>${i.title}</strong> <small>(${i.user_hash})</small> - [${i.status || 'open'}]
                     <p>${i.description}</p>
                 </div>
             `).join('') || 'まだ投稿がありません';
@@ -88,7 +110,12 @@
             const apiKey = document.getElementById('gemini_api_key').value.trim();
             const title = document.getElementById('title').value;
             const description = document.getElementById('description').value;
-            const user_hash = document.getElementById('user_hash').value;
+            const user_hash = currentUserHash; // ログイン中のユーザーを使用
+
+            if (!title || !description) {
+                alert('タイトルと内容を入力してください');
+                return;
+            }
 
             const payload = { user_hash, title, description };
 
@@ -97,7 +124,11 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            }).then(() => {
+            }).then(async res => {
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.message);
+                }
                 fetchIssues();
             });
 
@@ -105,7 +136,6 @@
             if (apiKey) {
                 try {
                     const genAI = new GoogleGenerativeAI(apiKey);
-                    // ユーザー環境で動作確認（429応答）が取れた gemini-2.5-flash を使用します
                     const model = genAI.getGenerativeModel(
                         { model: "gemini-2.5-flash" },
                         { apiVersion: "v1beta" }
@@ -115,7 +145,6 @@
                     タイトル: ${title}
                     内容: ${description}`;
 
-                    // 非同期で実行し、結果が出次第アラートを出す
                     model.generateContent(prompt).then(result => {
                         const response = result.response;
                         const text = response.text();
@@ -124,9 +153,9 @@
                         console.error("Gemini API Error details:", err);
                         const msg = err.message || "";
                         if (msg.includes("404")) {
-                            alert("AIエラー(404): モデル名またはAPIバージョンが認識されませんでした。Google AI Studioで 'Gemini API' が有効になっているか、別のキーでお試しください。\n(使用モデル: gemini-1.5-flash / API: v1)");
+                            alert("AIエラー(404): モデル名またはAPIバージョンが認識されませんでした。");
                         } else if (msg.includes("429")) {
-                            alert("AIエラー(429): リクエスト制限（Quota）を超過しました。数分待つか、Google AI Studioの設定を確認してください。");
+                            alert("AIエラー(429): リクエスト制限（Quota）を超過しました。");
                         } else {
                             alert("AIエラー: " + msg);
                         }
@@ -136,11 +165,17 @@
                 }
             }
 
-            await postPromise;
-            alert('投稿しました！');
+            try {
+                await postPromise;
+                alert('投稿しました！');
+                document.getElementById('title').value = '';
+                document.getElementById('description').value = '';
+            } catch (err) {
+                alert('投稿エラー: ' + err.message);
+            }
         }
 
-        // 初期化時にグローバルに公開（HTMLのonclickから呼べるようにするため）
+        // 初期化時にグローバルに公開
         window.postIssue = postIssue;
         fetchIssues();
     </script>

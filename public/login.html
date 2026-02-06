@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - 困りごとラボ</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f4f7f6;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .info {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-card">
+        <h1>困りごとラボ</h1>
+        <div id="login-form">
+            <input type="text" id="user_hash" placeholder="ニックネーム" required>
+            <input type="password" id="password" placeholder="パスワード" required>
+            <button onclick="login()">ログイン / 新規登録</button>
+        </div>
+        <div class="info">
+            新規の方：パスワードを設定して登録<br>
+            登録済の方：パスワードで認証
+        </div>
+    </div>
+
+    <script>
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function login() {
+            const user_hash = document.getElementById('user_hash').value.trim();
+            const rawPassword = document.getElementById('password').value;
+
+            if (!user_hash || !rawPassword) {
+                alert('ニックネームとパスワードを入力してください');
+                return;
+            }
+
+            // クライアント側でもハッシュ化（一応の気休めと帯域保護）
+            const hashedPassword = await hashPassword(rawPassword);
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_hash, password: hashedPassword })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    // ログイン情報を保存
+                    localStorage.setItem('user_hash', user_hash);
+                    localStorage.setItem('auth_token', hashedPassword); // 簡易的なセッション管理
+
+                    alert(data.message);
+                    location.href = 'index.html';
+                } else {
+                    alert('エラー: ' + data.message);
+                }
+            } catch (err) {
+                alert('通信エラーが発生しました');
+                console.error(err);
+            }
+        }
+
+        // すでにログイン済みなら index.html へ
+        if (localStorage.getItem('user_hash') && localStorage.getItem('auth_token')) {
+            location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>
