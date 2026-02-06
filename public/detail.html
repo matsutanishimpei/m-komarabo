@@ -4,89 +4,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>困りごと詳細 - 困りごとラボ</title>
+    <title>詳細 | 困りごとラボ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        h1,
+        h2,
+        h3,
+        .font-outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen p-8">
-    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        <div class="mb-6">
-            <a href="index.html" class="text-blue-500 hover:text-blue-700 text-sm font-medium">← ダッシュボードに戻る</a>
-        </div>
+<body class="min-h-screen text-slate-800 pb-20">
 
-        <div id="loading" class="text-center py-20 text-slate-400">読み込み中...</div>
-
-        <div id="detail-content" class="hidden">
-            <div id="status-badge"
-                class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4"></div>
-            <h1 id="title" class="text-3xl font-bold text-slate-800 mb-4"></h1>
-            <p id="description" class="text-slate-600 leading-relaxed whitespace-pre-wrap border-t pt-6"></p>
-
-            <div class="mt-12 bg-slate-100 p-6 rounded-lg">
-                <h3 class="text-lg font-bold mb-4">解決策を提案する（開発者向け）</h3>
-                <p class="text-sm text-slate-500 mb-4">※この機能は現在準備中です。GitHub連携URLなどを活用してください。</p>
-                <div id="github-area" class="hidden">
-                    <p class="text-sm font-medium mb-2">GitHub URL:</p>
-                    <a id="github-link" href="#" target="_blank" class="text-blue-600 break-all hover:underline"></a>
-                </div>
+    <header class="sticky top-0 z-50 glass border-b border-slate-200">
+        <div class="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2 group">
+                <div
+                    class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-xl group-hover:rotate-12 transition-transform">
+                    K</div>
+                <span class="text-xl font-outfit font-bold tracking-tight">困りごとラボ</span>
+            </a>
+            <div id="user-info" class="flex items-center gap-4">
+                <span id="display-user-hash"
+                    class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full">--</span>
+                <button onclick="logout()"
+                    class="text-xs font-bold text-red-400 hover:text-red-500 transition">ログアウト</button>
             </div>
         </div>
-    </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 mt-12">
+        <!-- 課題本体カード -->
+        <article id="issue-main"
+            class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 mb-10 transition-all hover:shadow-md">
+            <div id="issue-header" class="flex flex-wrap justify-between items-start gap-4 mb-6">
+                <div>
+                    <span id="issue-status"
+                        class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 inline-block">--</span>
+                    <h1 id="issue-title" class="text-3xl font-black text-slate-900">--</h1>
+                </div>
+                <!-- 役割別アクションエリア -->
+                <div id="issue-actions" class="flex gap-2"></div>
+            </div>
+
+            <div class="prose prose-slate max-w-none">
+                <p id="issue-description" class="text-slate-600 leading-relaxed whitespace-pre-wrap">--</p>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-slate-100 flex flex-wrap gap-8">
+                <div>
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-400 block mb-1">相談者</label>
+                    <span id="issue-requester" class="text-sm font-bold text-slate-700">--</span>
+                </div>
+                <div>
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-400 block mb-1">担当開発者</label>
+                    <span id="issue-developer" class="text-sm font-bold text-slate-700">--</span>
+                </div>
+                <div>
+                    <label
+                        class="text-[10px] uppercase tracking-widest font-bold text-slate-400 block mb-1">投稿日時</label>
+                    <span id="issue-date" class="text-sm font-medium text-slate-500">--</span>
+                </div>
+            </div>
+        </article>
+
+        <!-- コメントセクション -->
+        <section class="max-w-3xl mx-auto">
+            <h2 class="text-xl font-black text-slate-900 mb-8 flex items-center gap-3">
+                <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                タイムライン
+            </h2>
+
+            <!-- タイムライン表示エリア -->
+            <div id="comment-timeline" class="space-y-6 mb-12">
+                <!-- ここにコメントが入る -->
+            </div>
+
+            <!-- コメント投稿フォーム -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <textarea id="comment-input" rows="3"
+                    class="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    placeholder="コメントや解決報告を入力..."></textarea>
+                <div class="flex justify-end mt-4">
+                    <button onclick="postComment()"
+                        class="px-8 py-3 bg-slate-900 text-white text-sm font-black rounded-xl hover:bg-slate-800 shadow-lg shadow-slate-100 transition-all">送信する</button>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <script>
+        const API_BASE = '/api';
+        const currentUserHash = localStorage.getItem('user_hash');
         const urlParams = new URLSearchParams(window.location.search);
         const issueId = urlParams.get('id');
 
-        if (!issueId) {
-            alert('課題IDが指定されていません');
-            location.href = 'index.html';
+        if (!currentUserHash) window.location.href = 'login.html';
+        if (!issueId) window.location.href = 'index.html';
+
+        document.getElementById('display-user-hash').textContent = currentUserHash;
+
+        async function init() {
+            await fetchIssueDetail();
         }
 
-        async function fetchDetail() {
-            // 現状は一覧取得APIから該当するIDを探す簡易実装
+        async function fetchIssueDetail() {
             try {
-                const res = await fetch('/api/list-issues');
+                const res = await fetch(`${API_BASE}/get-issue-detail?id=${issueId}`);
                 const data = await res.json();
-                const issue = data.find(i => i.id == issueId);
-
-                if (!issue) {
-                    alert('課題が見つかりませんでした');
-                    location.href = 'index.html';
-                    return;
-                }
-
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('detail-content').classList.remove('hidden');
-
-                document.getElementById('title').innerText = issue.title;
-                document.getElementById('description').innerText = issue.description;
-
-                const badge = document.getElementById('status-badge');
-                badge.innerText = issue.status || 'open';
-
-                // ステータスに応じた色分け
-                if (issue.status === 'open') {
-                    badge.classList.add('bg-blue-100', 'text-blue-700');
-                } else if (issue.status === 'progress') {
-                    badge.classList.add('bg-amber-100', 'text-amber-700');
-                } else if (issue.status === 'closed') {
-                    badge.classList.add('bg-emerald-100', 'text-emerald-700');
-                }
-
-                if (issue.github_url) {
-                    document.getElementById('github-area').classList.remove('hidden');
-                    const link = document.getElementById('github-link');
-                    link.href = issue.github_url;
-                    link.innerText = issue.github_url;
-                }
-
+                renderDetail(data);
             } catch (err) {
                 console.error(err);
-                alert('データの読み込みに失敗しました');
+                alert("データの取得に失敗しました");
             }
         }
 
-        fetchDetail();
+        function renderDetail(data) {
+            const { issue, comments } = data;
+
+            // 基本情報の埋め込み
+            document.getElementById('issue-title').textContent = issue.title;
+            document.getElementById('issue-description').textContent = issue.description;
+            document.getElementById('issue-requester').textContent = issue.requester_user_hash;
+            document.getElementById('issue-developer').textContent = issue.developer_user_hash || '未着手';
+            document.getElementById('issue-date').textContent = new Date(issue.created_at).toLocaleString();
+
+            const statusEl = document.getElementById('issue-status');
+            statusEl.textContent = issue.status;
+            statusEl.className = `text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 inline-block ${issue.status === 'open' ? 'bg-blue-50 text-blue-500' :
+                    issue.status === 'progress' ? 'bg-amber-50 text-amber-500' : 'bg-slate-100 text-slate-500'
+                }`;
+
+            // ボタン制御
+            const actions = document.getElementById('issue-actions');
+            actions.innerHTML = '';
+
+            const isRequester = currentUserHash === issue.requester_user_hash;
+            const isDeveloper = currentUserHash === issue.developer_user_hash;
+
+            if (isRequester && issue.status !== 'closed') {
+                actions.innerHTML += `<button onclick="updateStatus('closed')" class="px-4 py-2 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-slate-800 transition">解決を承認する</button>`;
+            }
+            if (isDeveloper && issue.status === 'progress') {
+                actions.innerHTML += `
+                    <button onclick="unassignIssue()" class="px-4 py-2 text-slate-500 text-xs font-bold hover:text-red-500 transition">挙手を下ろす</button>
+                    <button onclick="postResolutionReport()" class="px-4 py-2 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 shadow-md shadow-blue-100 transition">解決報告を送る</button>
+                `;
+            }
+
+            // タイムライン描画
+            const timeline = document.getElementById('comment-timeline');
+            timeline.innerHTML = comments.map(c => {
+                const isMine = c.user_hash === currentUserHash;
+                return `
+                    <div class="flex ${isMine ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-[80%]">
+                            <div class="flex items-center gap-2 mb-1 px-2 ${isMine ? 'justify-end' : ''}">
+                                <span class="text-[10px] font-bold text-slate-400">${c.user_hash}</span>
+                                <span class="text-[10px] text-slate-300">${new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <div class="p-4 rounded-2xl text-sm shadow-sm ${isMine ? 'bg-slate-900 text-white rounded-tr-none' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                    }">
+                                ${c.content.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<p class="text-center text-slate-300 text-sm italic py-10">まだコメントはありません</p>';
+        }
+
+        async function postComment() {
+            const input = document.getElementById('comment-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/post-comment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ issue_id: issueId, content, user_hash: currentUserHash })
+                });
+                if (res.ok) {
+                    input.value = '';
+                    fetchIssueDetail();
+                }
+            } catch (err) {
+                alert("コメントの投稿に失敗しました");
+            }
+        }
+
+        async function updateStatus(status) {
+            if (!confirm(`ステータスを ${status} に変更しますか？`)) return;
+            try {
+                const res = await fetch(`${API_BASE}/update-issue-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: issueId, status })
+                });
+                if (res.ok) fetchIssueDetail();
+            } catch (err) {
+                alert("更新に失敗しました");
+            }
+        }
+
+        async function unassignIssue() {
+            if (!confirm('着手をキャンセルしますか？')) return;
+            try {
+                const res = await fetch(`${API_BASE}/unassign-issue`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: issueId })
+                });
+                if (res.ok) fetchIssueDetail();
+            } catch (err) {
+                alert("キャンセルに失敗しました");
+            }
+        }
+
+        async function postResolutionReport() {
+            const msg = "解決しました！内容の確認をお願いします。";
+            const res = await fetch(`${API_BASE}/post-comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ issue_id: issueId, content: msg, user_hash: currentUserHash })
+            });
+            if (res.ok) {
+                alert("解決報告を送りました！");
+                fetchIssueDetail();
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        init();
     </script>
 </body>
 

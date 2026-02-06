@@ -106,6 +106,51 @@ app.post('/unassign-issue', async (c) => {
   return c.json({ success: true, message: '挙手を下ろしました' })
 })
 
+// 悩み事の詳細取得API（コメント込み）
+app.get('/get-issue-detail', async (c) => {
+  const id = c.req.query('id')
+  if (!id) return c.json({ message: 'IDが指定されていません' }, 400)
+
+  // 1. 課題本体を取得
+  const issue = await c.env.DB.prepare(`
+    SELECT 
+      issues.*, 
+      requester.user_hash as requester_user_hash,
+      developer.user_hash as developer_user_hash
+    FROM issues 
+    JOIN users as requester ON issues.requester_id = requester.id
+    LEFT JOIN users as developer ON issues.developer_id = developer.id
+    WHERE issues.id = ?
+  `).bind(id).first()
+
+  if (!issue) return c.json({ message: '課題が見つかりません' }, 404)
+
+  // 2. コメント一覧を取得
+  const { results: comments } = await c.env.DB.prepare(`
+    SELECT comments.*, users.user_hash 
+    FROM comments 
+    JOIN users ON comments.user_id = users.id
+    WHERE comments.issue_id = ?
+    ORDER BY comments.created_at ASC
+  `).bind(id).all()
+
+  return c.json({ issue, comments: comments || [] })
+})
+
+// コメント投稿API
+app.post('/post-comment', async (c) => {
+  const { issue_id, content, user_hash } = await c.req.json()
+
+  const user = await c.env.DB.prepare('SELECT id FROM users WHERE user_hash = ?').bind(user_hash).first()
+  if (!user) return c.json({ message: 'ユーザーが見つかりません' }, 404)
+
+  await c.env.DB.prepare(
+    'INSERT INTO comments (issue_id, user_id, content) VALUES (?, ?, ?)'
+  ).bind(issue_id, user.id, content).run()
+
+  return c.json({ success: true, message: 'コメントを投稿しました' })
+})
+
 // 悩み事を投稿するAPI -> パスは /api/post-issue になる
 app.post('/post-issue', async (c) => {
   const { title, description, user_hash } = await c.req.json()
