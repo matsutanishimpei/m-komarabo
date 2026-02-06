@@ -66,8 +66,12 @@ app.get('/list-issues', async (c) => {
 
   query += ' ORDER BY created_at DESC'
 
-  const { results } = await c.env.DB.prepare(query).bind(...params).all()
-  return c.json(results)
+  const { results, success, error } = await c.env.DB.prepare(query).bind(...params).all()
+  if (!success) {
+    console.error("D1 Error:", error)
+    return c.json({ message: "データベースエラーが発生しました。マイグレーションが適用されているか確認してください。", error }, 500)
+  }
+  return c.json(results || [])
 })
 
 // ステータス更新（挙手・着手）API

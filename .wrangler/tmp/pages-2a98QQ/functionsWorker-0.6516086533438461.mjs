@@ -1,7 +1,7 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// ../.wrangler/tmp/bundle-PBMh9V/strip-cf-connecting-ip-header.js
+// ../.wrangler/tmp/bundle-dPGIUZ/strip-cf-connecting-ip-header.js
 function stripCfConnectingIPHeader(input, init) {
   const request = new Request(input, init);
   request.headers.delete("CF-Connecting-IP");
@@ -2113,8 +2113,12 @@ app.get("/list-issues", async (c) => {
     params.push(user_hash);
   }
   query += " ORDER BY created_at DESC";
-  const { results } = await c.env.DB.prepare(query).bind(...params).all();
-  return c.json(results);
+  const { results, success, error } = await c.env.DB.prepare(query).bind(...params).all();
+  if (!success) {
+    console.error("D1 Error:", error);
+    return c.json({ message: "\u30C7\u30FC\u30BF\u30D9\u30FC\u30B9\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002\u30DE\u30A4\u30B0\u30EC\u30FC\u30B7\u30E7\u30F3\u304C\u9069\u7528\u3055\u308C\u3066\u3044\u308B\u304B\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002", error }, 500);
+  }
+  return c.json(results || []);
 });
 app.post("/update-issue-status", async (c) => {
   const { id, status, user_hash } = await c.req.json();
@@ -2652,7 +2656,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-PBMh9V/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-dPGIUZ/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -2684,7 +2688,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-PBMh9V/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-dPGIUZ/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

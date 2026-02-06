@@ -1,2 +1,1 @@
--- USERSテーブルにpassword_hashカラムを追加
-ALTER TABLE users ADD COLUMN password_hash TEXT;
+-- 0003_add_password_hash.sql (すでに本番適用済みのため空にします)

@@ -218,7 +218,16 @@
                     : `/api/list-issues?filter=all`;
 
                 const res = await fetch(endpoint);
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.message || 'データ取得に失敗しました');
+                }
                 const data = await res.json();
+
+                if (!Array.isArray(data)) {
+                    console.error("Data is not an array:", data);
+                    return;
+                }
 
                 if (currentMode === 'requester') {
                     renderRequester(data);
@@ -227,6 +236,7 @@
                 }
             } catch (err) {
                 console.error("Fetch Error:", err);
+                alert("エラー: " + err.message);
             }
         }
 

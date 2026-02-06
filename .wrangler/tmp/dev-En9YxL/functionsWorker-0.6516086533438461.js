@@ -2101,8 +2101,12 @@ app.get("/list-issues", async (c) => {
     params.push(user_hash);
   }
   query += " ORDER BY created_at DESC";
-  const { results } = await c.env.DB.prepare(query).bind(...params).all();
-  return c.json(results);
+  const { results, success, error } = await c.env.DB.prepare(query).bind(...params).all();
+  if (!success) {
+    console.error("D1 Error:", error);
+    return c.json({ message: "\u30C7\u30FC\u30BF\u30D9\u30FC\u30B9\u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002\u30DE\u30A4\u30B0\u30EC\u30FC\u30B7\u30E7\u30F3\u304C\u9069\u7528\u3055\u308C\u3066\u3044\u308B\u304B\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002", error }, 500);
+  }
+  return c.json(results || []);
 });
 app.post("/update-issue-status", async (c) => {
   const { id, status, user_hash } = await c.req.json();
