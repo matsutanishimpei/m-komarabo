@@ -105,7 +105,7 @@
             if (apiKey) {
                 try {
                     const genAI = new GoogleGenerativeAI(apiKey);
-                    // 確実に存在するはずの 'gemini-1.5-flash' を v1 API で呼び出します
+                    // 確実に存在するはずの 'gemini-2.5-flash' を v1 API で呼び出します
                     const model = genAI.getGenerativeModel(
                         { model: "gemini-1.5-flash" },
                         { apiVersion: "v1" }
