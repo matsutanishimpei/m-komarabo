@@ -202,7 +202,139 @@ app.post('/post-issue', async (c) => {
     'INSERT INTO issues (requester_id, title, description) VALUES (?, ?, ?)'
   ).bind(user.id, title, description).run()
 
+
   return c.json({ success: true, message: '投稿完了しました！' })
+})
+
+// ========================================
+// ワクワク試作室 API
+// ========================================
+
+// ベースプロンプト取得API
+app.get('/wakuwaku/base-prompt', async (c) => {
+  const config = await c.env.DB.prepare(
+    'SELECT value FROM site_configs WHERE key = ?'
+  ).bind('wakuwaku_base_prompt').first()
+
+  return c.json({
+    success: true,
+    prompt: config?.value || 'プロンプトが設定されていません'
+  })
+})
+
+// プロダクト一覧取得API
+app.get('/wakuwaku/products', async (c) => {
+  const { results } = await c.env.DB.prepare(`
+    SELECT 
+      products.*,
+      users.user_hash as creator_user_hash
+    FROM products
+    JOIN users ON products.creator_id = users.id
+    WHERE products.status = 'published'
+    ORDER BY products.created_at DESC
+  `).all()
+
+  return c.json(results || [])
+})
+
+// プロダクト詳細取得API
+app.get('/wakuwaku/product/:id', async (c) => {
+  const id = c.req.param('id')
+
+  const product = await c.env.DB.prepare(`
+    SELECT 
+      products.*,
+      users.user_hash as creator_user_hash
+    FROM products
+    JOIN users ON products.creator_id = users.id
+    WHERE products.id = ?
+  `).bind(id).first()
+
+  if (!product) {
+    return c.json({ message: 'プロダクトが見つかりません' }, 404)
+  }
+
+  return c.json(product)
+})
+
+// プロダクト投稿API
+app.post('/wakuwaku/post-product', async (c) => {
+  const { title, url, initial_prompt_log, dev_obsession, user_hash } = await c.req.json()
+
+  // バリデーション
+  if (!title || !initial_prompt_log) {
+    return c.json({ success: false, message: 'タイトルと初期衝動履歴は必須です' }, 400)
+  }
+
+  // ユーザー確認
+  const user = await c.env.DB.prepare(
+    'SELECT id FROM users WHERE user_hash = ?'
+  ).bind(user_hash).first()
+
+  if (!user) {
+    return c.json({ success: false, message: 'ユーザーが見つかりません' }, 404)
+  }
+
+  // プロダクト作成
+  await c.env.DB.prepare(`
+    INSERT INTO products (creator_id, title, url, initial_prompt_log, dev_obsession, sealed_at)
+    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+  `).bind(user.id, title, url || null, initial_prompt_log, dev_obsession || null).run()
+
+  return c.json({ success: true, message: 'プロダクトを投稿しました！' })
+})
+
+// プロダクト更新API（initial_prompt_logは更新不可）
+app.post('/wakuwaku/update-product', async (c) => {
+  const { id, title, url, dev_obsession, user_hash } = await c.req.json()
+
+  // 既存プロダクト確認
+  const existingProduct = await c.env.DB.prepare(`
+    SELECT products.*, users.user_hash
+    FROM products
+    JOIN users ON products.creator_id = users.id
+    WHERE products.id = ?
+  `).bind(id).first()
+
+  if (!existingProduct) {
+    return c.json({ success: false, message: 'プロダクトが見つかりません' }, 404)
+  }
+
+  // 投稿者本人確認
+  if (existingProduct.user_hash !== user_hash) {
+    return c.json({ success: false, message: '自分の投稿のみ編集できます' }, 403)
+  }
+
+  // initial_prompt_logの更新を試みた場合はエラー
+  // （フロントエンドでは送信しないが、念のため）
+
+  // 更新（initial_prompt_logとsealed_atは除外）
+  await c.env.DB.prepare(`
+    UPDATE products 
+    SET title = ?, url = ?, dev_obsession = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(title, url || null, dev_obsession || null, id).run()
+
+  return c.json({ success: true, message: 'プロダクトを更新しました' })
+})
+
+// ========================================
+// 管理機能 API
+// ========================================
+
+// ベースプロンプト更新API（管理者用）
+app.post('/admin/update-base-prompt', async (c) => {
+  const { prompt, user_hash } = await c.req.json()
+
+  // TODO: 管理者権限チェック（現状は省略）
+
+  await c.env.DB.prepare(`
+    UPDATE site_configs 
+    SET value = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE key = 'wakuwaku_base_prompt'
+  `).bind(prompt).run()
+
+  return c.json({ success: true, message: 'ベースプロンプトを更新しました' })
 })
 
 export const onRequest = handle(app)

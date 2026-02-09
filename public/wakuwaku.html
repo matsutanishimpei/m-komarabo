@@ -145,10 +145,10 @@
                     「これ、誰得？」と思われるような作品、大歓迎です。<br>
                     技術の無駄遣いこそ、イノベーションの種。
                 </p>
-                <button
-                    class="px-8 py-3 bg-white text-slate-900 font-semibold rounded-xl hover:bg-slate-100 transition">
-                    作品を投稿する（準備中）
-                </button>
+                <a href="wakuwaku-post.html"
+                    class="px-8 py-3 bg-white text-slate-900 font-semibold rounded-xl hover:bg-slate-100 transition inline-block">
+                    作品を投稿する
+                </a>
             </div>
         </section>
 
@@ -194,6 +194,57 @@
             © 2026 Waku-Waku Lab. Keep experimenting, keep playing.
         </p>
     </footer>
+
+    <script>
+        // プロダクト一覧を読み込む
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/wakuwaku/products');
+                const products = await res.json();
+
+                const grid = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3');
+
+                if (products.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-20">
+                            <p class="text-slate-400 mb-4">まだ作品が投稿されていません</p>
+                            <a href="wakuwaku-post.html" class="text-purple-400 hover:text-purple-300 transition">
+                                最初の作品を投稿する →
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = products.map(p => `
+                    <a href="wakuwaku-detail.html?id=${p.id}" class="project-card bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 block">
+                        <div class="gradient-subtle h-40 flex items-center justify-center">
+                            <span class="text-6xl">🎨</span>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="px-2 py-1 bg-purple-500/10 text-purple-400 text-xs font-medium rounded-md border border-purple-500/20">公開中</span>
+                                <span class="text-xs text-slate-500">${new Date(p.sealed_at).toLocaleDateString('ja-JP')}</span>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">
+                                ${p.title}
+                            </h3>
+                            <p class="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">
+                                ${p.dev_obsession || 'エンジニアの変執的なこだわりが詰まった作品'}
+                            </p>
+                            <div class="flex gap-2">
+                                <span class="px-2 py-1 bg-slate-700 text-slate-300 text-xs rounded-md">by ${p.creator_user_hash}</span>
+                            </div>
+                        </div>
+                    </a>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        loadProducts();
+    </script>
 </body>
 
 </html>
