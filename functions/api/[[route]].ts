@@ -330,6 +330,42 @@ app.post('/wakuwaku/update-product', async (c) => {
   return c.json({ success: true, message: 'プロダクトを更新しました' })
 })
 
+// プロダクト削除API
+app.post('/wakuwaku/delete-product', async (c) => {
+  try {
+    const { id, user_hash } = await c.req.json()
+
+    // プロダクト存在確認
+    const existingProduct = await c.env.DB.prepare(`
+      SELECT products.*, users.user_hash
+      FROM products
+      JOIN users ON products.creator_id = users.id
+      WHERE products.id = ?
+    `).bind(id).first()
+
+    if (!existingProduct) {
+      return c.json({ success: false, message: 'プロダクトが見つかりません' }, 404)
+    }
+
+    // 投稿者本人確認
+    if (existingProduct.user_hash !== user_hash) {
+      return c.json({ success: false, message: '自分の投稿のみ削除できます' }, 403)
+    }
+
+    // 削除実行
+    await c.env.DB.prepare(`
+      DELETE FROM products WHERE id = ?
+    `).bind(id).run()
+
+    return c.json({ success: true, message: 'プロダクトを削除しました' })
+  } catch (err) {
+    console.error('Error deleting product:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ success: false, message: 'プロダクトの削除に失敗しました: ' + errorMessage }, 500)
+  }
+})
+
+
 // ========================================
 // 管理機能 API
 // ========================================
