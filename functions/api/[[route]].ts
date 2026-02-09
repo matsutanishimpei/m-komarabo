@@ -151,6 +151,39 @@ app.post('/post-comment', async (c) => {
   return c.json({ success: true, message: 'コメントを投稿しました' })
 })
 
+// 悩み事を削除するAPI（着手されていないもののみ）
+app.post('/delete-issue', async (c) => {
+  const { id, user_hash } = await c.req.json()
+
+  // 1. 課題の存在確認と所有者チェック
+  const issue = await c.env.DB.prepare(`
+    SELECT issues.*, users.user_hash 
+    FROM issues 
+    JOIN users ON issues.requester_id = users.id
+    WHERE issues.id = ?
+  `).bind(id).first()
+
+  if (!issue) {
+    return c.json({ success: false, message: '課題が見つかりません' }, 404)
+  }
+
+  // 2. 投稿者本人かチェック
+  if (issue.user_hash !== user_hash) {
+    return c.json({ success: false, message: '自分の投稿のみ削除できます' }, 403)
+  }
+
+  // 3. 着手されていないかチェック（status='open' かつ developer_id=NULL）
+  if (issue.status !== 'open' || issue.developer_id !== null) {
+    return c.json({ success: false, message: '着手済みの課題は削除できません' }, 400)
+  }
+
+  // 4. 削除実行（関連コメントも削除）
+  await c.env.DB.prepare('DELETE FROM comments WHERE issue_id = ?').bind(id).run()
+  await c.env.DB.prepare('DELETE FROM issues WHERE id = ?').bind(id).run()
+
+  return c.json({ success: true, message: '課題を削除しました' })
+})
+
 // 悩み事を投稿するAPI -> パスは /api/post-issue になる
 app.post('/post-issue', async (c) => {
   const { title, description, user_hash } = await c.req.json()

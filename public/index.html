@@ -245,20 +245,27 @@
             const progressList = document.getElementById('list-progress');
             const closedList = document.getElementById('list-closed');
 
-            const renderItem = (i) => `
-                <a href="detail.html?id=${i.id}" class="block bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition group">
-                    <h5 class="font-bold text-slate-800 group-hover:text-blue-600 transition truncate">${i.title}</h5>
-                    <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-tighter">${new Date(i.created_at).toLocaleDateString()}</p>
-                </a>
+            const renderItem = (i, showDelete = false) => `
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition group">
+                    <a href="detail.html?id=${i.id}" class="block">
+                        <h5 class="font-bold text-slate-800 group-hover:text-blue-600 transition truncate">${i.title}</h5>
+                        <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-tighter">${new Date(i.created_at).toLocaleDateString()}</p>
+                    </a>
+                    ${showDelete ? `
+                        <button onclick="deleteIssue(${i.id}, event)" class="mt-3 w-full py-2 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">
+                            取り下げる
+                        </button>
+                    ` : ''}
+                </div>
             `;
 
             const openItems = data.filter(i => (i.status || 'open') === 'open');
             const progressItems = data.filter(i => i.status === 'progress');
             const closedItems = data.filter(i => i.status === 'closed');
 
-            openList.innerHTML = openItems.map(renderItem).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
-            progressList.innerHTML = progressItems.map(renderItem).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
-            closedList.innerHTML = closedItems.map(renderItem).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
+            openList.innerHTML = openItems.map(i => renderItem(i, true)).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
+            progressList.innerHTML = progressItems.map(i => renderItem(i, false)).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
+            closedList.innerHTML = closedItems.map(i => renderItem(i, false)).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
 
             document.getElementById('count-open').innerText = openItems.length;
             document.getElementById('count-progress').innerText = progressItems.length;
@@ -336,6 +343,34 @@
             }
         }
         window.unassignIssue = unassignIssue;
+
+        async function deleteIssue(id, event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!confirm('この課題を取り下げますか？\n※着手されていない課題のみ削除できます')) return;
+
+            try {
+                const res = await fetch('/api/delete-issue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, user_hash: currentUserHash })
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    fetchIssues();
+                    alert(result.message || '課題を削除しました');
+                } else {
+                    alert(result.message || '削除に失敗しました');
+                }
+            } catch (err) {
+                console.error('Delete Error:', err);
+                alert('エラーが発生しました');
+            }
+        }
+        window.deleteIssue = deleteIssue;
 
         async function postIssue() {
             const apiKey = document.getElementById('gemini_api_key').value.trim();
