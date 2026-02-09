@@ -238,15 +238,18 @@ User: いいね！でもここはもっと..."
 
                 const data = await res.json();
 
+                console.log('Response status:', res.status);
+                console.log('Response data:', data);
+
                 if (res.ok && data.success) {
                     alert('投稿完了しました！\nあなたの初期衝動が永久保存されました。');
                     location.href = 'wakuwaku.html';
                 } else {
-                    alert('エラー: ' + data.message);
+                    alert('エラー: ' + (data.message || 'サーバーエラーが発生しました'));
                 }
             } catch (err) {
-                console.error(err);
-                alert('投稿に失敗しました');
+                console.error('投稿エラー:', err);
+                alert('投稿に失敗しました\n\n詳細: ' + err.message + '\n\nブラウザのコンソール（F12）を確認してください。');
             }
         }
 
