@@ -4,133 +4,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ログイン - 困りごとラボ</title>
+    <title>ログイン</title>
     <style>
         body {
             font-family: sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            transition: background 0.3s ease;
+        }
+
+        /* コマラボテーマ（デフォルト） */
+        body.theme-komarabo {
             background: #f4f7f6;
         }
 
-        .login-card {
+        body.theme-komarabo .login-card {
             background: white;
+            color: #333;
+        }
+
+        body.theme-komarabo h1 {
+            color: #333;
+        }
+
+        body.theme-komarabo input {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        body.theme-komarabo button {
+            background: #0070f3;
+        }
+
+        body.theme-komarabo button:hover {
+            background: #0051cc;
+        }
+
+        /* ワクワク試作室テーマ */
+        body.theme-wakuwaku {
+            background: #0f172a;
+        }
+
+        body.theme-wakuwaku .login-card {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+        }
+
+        body.theme-wakuwaku h1 {
+            color: #f1f5f9;
+        }
+
+        body.theme-wakuwaku input {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+        }
+
+        body.theme-wakuwaku input::placeholder {
+            color: #64748b;
+        }
+
+        body.theme-wakuwaku button {
+            background: #8b5cf6;
+        }
+
+        body.theme-wakuwaku button:hover {
+            background: #7c3aed;
+        }
+
+        body.theme-wakuwaku .toggle-text {
+            color: #94a3b8;
+        }
+
+        body.theme-wakuwaku .toggle-text button {
+            color: #a78bfa;
+            background: transparent;
+            padding: 0;
+            width: auto;
+        }
+
+        body.theme-wakuwaku .toggle-text button:hover {
+            color: #c4b5fd;
+            background: transparent;
+        }
+
+        .login-card {
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
+            transition: all 0.3s ease;
         }
 
         h1 {
             text-align: center;
-            color: #333;
             margin-bottom: 30px;
+            font-size: 24px;
         }
 
         input {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
-            border: 1px solid #ddd;
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 16px;
+            transition: all 0.3s ease;
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background: #0070f3;
             color: white;
             border: none;
             border-radius: 6px;
-            cursor: pointer;
             font-size: 16px;
-            font-weight: bold;
-            margin-top: 20px;
-            transition: background 0.2s;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
         }
 
-        button:hover {
-            background: #0056b3;
-        }
-
-        .info {
-            font-size: 14px;
-            color: #666;
+        .toggle-text {
             text-align: center;
             margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .toggle-text button {
+            color: #0070f3;
+            text-decoration: underline;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
         }
     </style>
 </head>
 
-<body>
+<body class="theme-komarabo">
     <div class="login-card">
-        <h1>困りごとラボ</h1>
-        <div id="login-form">
-            <input type="text" id="user_hash" placeholder="ニックネーム" required>
-            <input type="password" id="password" placeholder="パスワード" required>
-            <button onclick="login()">ログイン / 新規登録</button>
+        <h1 id="pageTitle">困りごとラボ - ログイン</h1>
+
+        <div id="loginForm">
+            <input type="text" id="loginUserHash" placeholder="ニックネーム">
+            <input type="password" id="loginPassword" placeholder="パスワード">
+            <button onclick="login()">ログイン</button>
         </div>
-        <div class="info">
-            新規の方：パスワードを設定して登録<br>
-            登録済の方：パスワードで認証
+
+        <div id="registerForm" style="display: none;">
+            <input type="text" id="registerUserHash" placeholder="ニックネーム">
+            <input type="password" id="registerPassword" placeholder="パスワード">
+            <button onclick="register()">新規登録</button>
+        </div>
+
+        <div class="toggle-text">
+            <span id="toggleText">アカウントをお持ちでない方は</span>
+            <button id="toggleButton" onclick="toggleForm()">新規登録</button>
         </div>
     </div>
 
     <script>
-        async function hashPassword(password) {
-            const msgBuffer = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        let isLoginMode = true;
+        let theme = 'komarabo';
+        let redirectTo = 'komarabo.html';
+
+        // URLハッシュからテーマを判定
+        function initTheme() {
+            const hash = window.location.hash.substring(1); // #を除去
+            if (hash === 'wakuwaku') {
+                theme = 'wakuwaku';
+                redirectTo = 'wakuwaku-post.html';
+                document.body.className = 'theme-wakuwaku';
+                document.getElementById('pageTitle').textContent = 'ワクワク試作室 - ログイン';
+            } else {
+                theme = 'komarabo';
+                redirectTo = 'komarabo.html';
+                document.body.className = 'theme-komarabo';
+                document.getElementById('pageTitle').textContent = '困りごとラボ - ログイン';
+            }
+        }
+
+        function toggleForm() {
+            isLoginMode = !isLoginMode;
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const toggleText = document.getElementById('toggleText');
+            const toggleButton = document.getElementById('toggleButton');
+
+            if (isLoginMode) {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                toggleText.textContent = 'アカウントをお持ちでない方は';
+                toggleButton.textContent = '新規登録';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                toggleText.textContent = 'すでにアカウントをお持ちの方は';
+                toggleButton.textContent = 'ログイン';
+            }
         }
 
         async function login() {
-            const user_hash = document.getElementById('user_hash').value.trim();
-            const rawPassword = document.getElementById('password').value;
+            const user_hash = document.getElementById('loginUserHash').value;
+            const password = document.getElementById('loginPassword').value;
 
-            if (!user_hash || !rawPassword) {
-                alert('ニックネームとパスワードを入力してください');
-                return;
-            }
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_hash, password })
+            });
 
-            // クライアント側でもハッシュ化（一応の気休めと帯域保護）
-            const hashedPassword = await hashPassword(rawPassword);
+            const data = await res.json();
 
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_hash, password: hashedPassword })
-                });
-
-                const data = await res.json();
-
-                if (res.ok && data.success) {
-                    // ログイン情報を保存
-                    localStorage.setItem('user_hash', user_hash);
-                    localStorage.setItem('auth_token', hashedPassword); // 簡易的なセッション管理
-
-                    alert(data.message);
-                    location.href = 'komarabo.html';
-                } else {
-                    alert('エラー: ' + data.message);
-                }
-            } catch (err) {
-                alert('通信エラーが発生しました');
-                console.error(err);
+            if (data.success) {
+                localStorage.setItem('user_hash', data.user_hash);
+                localStorage.setItem('auth_token', 'dummy_token');
+                alert('ログイン成功！');
+                location.href = redirectTo;
+            } else {
+                alert(data.message);
             }
         }
 
-        // すでにログイン済みなら komarabo.html へ
-        if (localStorage.getItem('user_hash') && localStorage.getItem('auth_token')) {
-            location.href = 'komarabo.html';
+        async function register() {
+            const user_hash = document.getElementById('registerUserHash').value;
+            const password = document.getElementById('registerPassword').value;
+
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_hash, password })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert('登録成功！ログインしてください。');
+                toggleForm();
+            } else {
+                alert(data.message);
+            }
         }
+
+        // ページ読み込み時にテーマを初期化
+        initTheme();
     </script>
 </body>
 
