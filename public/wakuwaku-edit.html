@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品を編集 - ワクワク試作室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-slate-800 px-6 py-4 mb-8 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <a href="wakuwaku.html"
+                class="text-slate-400 hover:text-white transition text-sm font-medium flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                戻る
+            </a>
+            <h1 class="text-xl font-semibold text-white">
+                作品を編集
+            </h1>
+            <div class="w-16"></div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 pb-20">
+        <div id="editForm">
+            <div class="text-center py-20">
+                <p class="text-slate-400">読み込み中...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const currentUserHash = localStorage.getItem('user_hash');
+        const authToken = localStorage.getItem('auth_token');
+
+        if (!currentUserHash || !authToken) {
+            alert('ログインが必要です');
+            location.href = 'login.html';
+            throw new Error('Not logged in');
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        async function loadProduct() {
+            if (!productId) {
+                document.getElementById('editForm').innerHTML = `
+                    <div class="text-center py-20">
+                        <p class="text-slate-400">プロダクトIDが指定されていません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/wakuwaku/product/${productId}`);
+                const product = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(product.message);
+                }
+
+                // 投稿者本人確認
+                if (product.creator_user_hash !== currentUserHash) {
+                    document.getElementById('editForm').innerHTML = `
+                        <div class="text-center py-20">
+                            <p class="text-red-400">自分の投稿のみ編集できます</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                renderEditForm(product);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('editForm').innerHTML = `
+                    <div class="text-center py-20">
+                        <p class="text-red-400">${err.message || 'プロダクトの読み込みに失敗しました'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderEditForm(product) {
+            const sealedDate = new Date(product.sealed_at);
+
+            document.getElementById('editForm').innerHTML = `
+                <!-- 編集可能な項目 -->
+                <div class="space-y-6 mb-10">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">
+                            アプリ名<span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="title" value="${product.title}"
+                            class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">
+                            URL（任意）
+                        </label>
+                        <input type="url" id="url" value="${product.url || ''}"
+                            class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">
+                            こだわりポイント
+                        </label>
+                        <textarea id="devObsession" rows="8"
+                            class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition">${product.dev_obsession || ''}</textarea>
+                    </div>
+                </div>
+
+                <!-- 封印された初期衝動（表示のみ） -->
+                <div class="mb-10">
+                    <div class="flex items-center gap-3 mb-4">
+                        <h3 class="text-xl font-semibold text-white">初期衝動（封印済・編集不可）</h3>
+                        <span class="px-3 py-1 bg-red-500/10 text-red-400 text-xs font-medium rounded-md border border-red-500/20">
+                            🔒 編集不可
+                        </span>
+                    </div>
+                    <div class="bg-slate-800/50 border border-red-500/30 rounded-xl p-6">
+                        <div class="text-xs text-red-300 mb-4">
+                            ${sealedDate.getFullYear()}年${sealedDate.getMonth() + 1}月${sealedDate.getDate()}日に封印
+                        </div>
+                        <pre class="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed font-mono">${product.initial_prompt_log}</pre>
+                    </div>
+                </div>
+
+                <!-- 更新ボタン -->
+                <div class="flex gap-4">
+                    <button onclick="updateProduct()" class="flex-1 px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition">
+                        更新する
+                    </button>
+                    <a href="wakuwaku-detail.html?id=${product.id}" class="flex-1 px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl transition text-center">
+                        キャンセル
+                    </a>
+                </div>
+            `;
+        }
+
+        async function updateProduct() {
+            const title = document.getElementById('title').value.trim();
+            const url = document.getElementById('url').value.trim();
+            const devObsession = document.getElementById('devObsession').value.trim();
+
+            if (!title) {
+                alert('アプリ名は必須です');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/wakuwaku/update-product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: productId,
+                        title,
+                        url: url || null,
+                        dev_obsession: devObsession || null,
+                        user_hash: currentUserHash
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    alert('更新しました！');
+                    location.href = `wakuwaku-detail.html?id=${productId}`;
+                } else {
+                    alert('エラー: ' + (data.message || 'サーバーエラーが発生しました'));
+                }
+            } catch (err) {
+                console.error('更新エラー:', err);
+                alert('更新に失敗しました\n\n詳細: ' + err.message);
+            }
+        }
+
+        loadProduct();
+    </script>
+</body>
+
+</html>
