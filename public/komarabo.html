@@ -162,29 +162,19 @@
     </script>
     <script type="module">
         import { GoogleGenerativeAI } from "@google/generative-ai";
+        import { checkAuth, logout as commonLogout, displayUserName } from './js/common.js';
 
         // ログインチェック
-        const currentUserHash = localStorage.getItem('user_hash');
-        const authToken = localStorage.getItem('auth_token');
-
-        if (!currentUserHash || !authToken) {
-            alert('ログインが必要です');
-            location.href = 'login.html';
-            throw new Error('Not logged in'); // スクリプト実行を停止
-        }
+        const auth = checkAuth(true, 'komarabo');
+        const currentUserHash = auth.userHash;
 
         let currentMode = 'requester';
 
         // UIの初期化
-        const displayElement = document.getElementById('display_user_hash');
-        if (displayElement) {
-            displayElement.textContent = currentUserHash;
-        }
+        displayUserName('display_user_hash');
 
         function logout() {
-            localStorage.removeItem('user_hash');
-            localStorage.removeItem('auth_token');
-            location.href = 'login.html';
+            commonLogout('login.html');
         }
         window.logout = logout;
 
