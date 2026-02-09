@@ -224,8 +224,8 @@
 
             if (data.success) {
                 localStorage.setItem('user_hash', data.user_hash);
-                localStorage.setItem('auth_token', 'dummy_token');
-                alert('ログイン成功！');
+                localStorage.setItem('auth_token', data.auth_token || 'dummy_token');
+                alert(data.message);
                 location.href = redirectTo;
             } else {
                 alert(data.message);
@@ -236,7 +236,7 @@
             const user_hash = document.getElementById('registerUserHash').value;
             const password = document.getElementById('registerPassword').value;
 
-            const res = await fetch('/api/register', {
+            const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_hash, password })
@@ -245,8 +245,10 @@
             const data = await res.json();
 
             if (data.success) {
-                alert('登録成功！ログインしてください。');
-                toggleForm();
+                localStorage.setItem('user_hash', data.user_hash);
+                localStorage.setItem('auth_token', data.auth_token || 'dummy_token');
+                alert(data.message);
+                location.href = redirectTo;
             } else {
                 alert(data.message);
             }
