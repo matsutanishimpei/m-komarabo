@@ -176,7 +176,10 @@
         let currentMode = 'requester';
 
         // UIの初期化
-        document.getElementById('display_user_hash').innerText = currentUserHash;
+        const displayElement = document.getElementById('display_user_hash');
+        if (displayElement) {
+            displayElement.textContent = currentUserHash;
+        }
 
         function logout() {
             localStorage.removeItem('user_hash');
