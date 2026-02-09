@@ -186,6 +186,7 @@ User: いいね！でもここはもっと..."
         if (!currentUserHash || !authToken) {
             alert('ログインが必要です');
             location.href = 'login.html';
+            throw new Error('Not logged in'); // スクリプト実行を停止
         }
 
         // ベースプロンプトを取得
