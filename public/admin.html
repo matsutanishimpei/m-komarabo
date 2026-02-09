@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理画面 - Matsutani Prototyping Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">管理画面</h1>
+                <p class="text-sm text-gray-500">Matsutani Prototyping Studio</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-600" id="adminName">Loading...</span>
+                <a href="index.html" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition">
+                    サイトに戻る
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">総ユーザー数</h3>
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold text-gray-900" id="userCount">-</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">コマラボ投稿</h3>
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold text-gray-900" id="issueCount">-</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">ワクワク作品</h3>
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold text-gray-900" id="productCount">-</p>
+            </div>
+
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-gray-600">総コメント数</h3>
+                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                        </path>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold text-gray-900" id="commentCount">-</p>
+            </div>
+        </div>
+
+        <!-- Management Sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Base Prompt Management -->
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                        </path>
+                    </svg>
+                    ワクワク試作室 - ベースプロンプト
+                </h2>
+                <textarea id="basePrompt" rows="8"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none mb-4"
+                    placeholder="読み込み中..."></textarea>
+                <button onclick="updateBasePrompt()"
+                    class="w-full px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition">
+                    プロンプトを更新
+                </button>
+            </div>
+
+            <!-- User Management -->
+            <div class="bg-white rounded-xl p-6 border border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                    ユーザー管理
+                </h2>
+                <div id="userList" class="space-y-2 max-h-64 overflow-y-auto">
+                    <p class="text-sm text-gray-500">読み込み中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="mt-6 bg-white rounded-xl p-6 border border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                最近の投稿
+            </h2>
+            <div id="recentActivity" class="space-y-3">
+                <p class="text-sm text-gray-500">読み込み中...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const currentUserHash = localStorage.getItem('user_hash');
+        const authToken = localStorage.getItem('auth_token');
+
+        // 管理者チェック
+        async function checkAdmin() {
+            if (!currentUserHash || !authToken) {
+                alert('ログインが必要です');
+                location.href = 'login.html';
+                throw new Error('Not logged in');
+            }
+
+            try {
+                const res = await fetch('/api/admin/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_hash: currentUserHash })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.is_admin) {
+                    alert('管理者権限が必要です');
+                    location.href = 'index.html';
+                    throw new Error('Not admin');
+                }
+
+                document.getElementById('adminName').textContent = `管理者: ${currentUserHash}`;
+            } catch (err) {
+                console.error(err);
+                alert('管理者確認に失敗しました');
+                location.href = 'index.html';
+            }
+        }
+
+        // 統計情報を取得
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/admin/stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_hash: currentUserHash })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('userCount').textContent = data.users || 0;
+                    document.getElementById('issueCount').textContent = data.issues || 0;
+                    document.getElementById('productCount').textContent = data.products || 0;
+                    document.getElementById('commentCount').textContent = data.comments || 0;
+                }
+            } catch (err) {
+                console.error('統計情報の取得に失敗:', err);
+            }
+        }
+
+        // ベースプロンプトを取得
+        async function loadBasePrompt() {
+            try {
+                const res = await fetch('/api/wakuwaku/base-prompt');
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('basePrompt').value = data.prompt;
+                }
+            } catch (err) {
+                console.error('ベースプロンプトの取得に失敗:', err);
+            }
+        }
+
+        // ベースプロンプトを更新
+        async function updateBasePrompt() {
+            const prompt = document.getElementById('basePrompt').value.trim();
+
+            if (!prompt) {
+                alert('プロンプトを入力してください');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/update-base-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt,
+                        user_hash: currentUserHash
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    alert('プロンプトを更新しました！');
+                } else {
+                    alert('エラー: ' + (data.message || 'サーバーエラー'));
+                }
+            } catch (err) {
+                console.error('更新エラー:', err);
+                alert('更新に失敗しました');
+            }
+        }
+
+        // ユーザー一覧を取得
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_hash: currentUserHash })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.users) {
+                    const userList = document.getElementById('userList');
+                    userList.innerHTML = data.users.map(user => `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                                    ${user.user_hash.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">${user.user_hash}</p>
+                                    <p class="text-xs text-gray-500">登録: ${new Date(user.created_at).toLocaleDateString('ja-JP')}</p>
+                                </div>
+                            </div>
+                            ${user.is_admin ? '<span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded">管理者</span>' : ''}
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('ユーザー一覧の取得に失敗:', err);
+            }
+        }
+
+        // 最近の投稿を取得
+        async function loadRecentActivity() {
+            try {
+                const res = await fetch('/api/admin/recent-activity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_hash: currentUserHash })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.activities) {
+                    const activityList = document.getElementById('recentActivity');
+                    activityList.innerHTML = data.activities.map(activity => `
+                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="w-2 h-2 rounded-full bg-green-500 mt-2"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-900">${activity.title}</p>
+                                <p class="text-xs text-gray-500">${activity.type} by ${activity.user_hash} - ${new Date(activity.created_at).toLocaleDateString('ja-JP')}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('最近の投稿の取得に失敗:', err);
+            }
+        }
+
+        // 初期化
+        async function init() {
+            await checkAdmin();
+            loadStats();
+            loadBasePrompt();
+            loadUsers();
+            loadRecentActivity();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
