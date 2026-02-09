@@ -41,55 +41,35 @@
         </div>
     </main>
 
-    <script>
-        const currentUserHash = localStorage.getItem('user_hash');
-        const authToken = localStorage.getItem('auth_token');
+    <script type="module">
+        import { checkAuth, apiRequest, validateRequired, formatDateTime, showError, showLoading } from './js/common.js';
 
-        if (!currentUserHash || !authToken) {
-            alert('ログインが必要です');
-            location.href = 'login.html#wakuwaku';
-            throw new Error('Not logged in');
-        }
+        // 認証チェック
+        const auth = checkAuth(true, 'wakuwaku');
+        const currentUserHash = auth.userHash;
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
 
         async function loadProduct() {
             if (!productId) {
-                document.getElementById('editForm').innerHTML = `
-                    <div class="text-center py-20">
-                        <p class="text-slate-400">プロダクトIDが指定されていません</p>
-                    </div>
-                `;
+                showError('editForm', 'プロダクトIDが指定されていません');
                 return;
             }
 
             try {
-                const res = await fetch(`/api/wakuwaku/product/${productId}`);
-                const product = await res.json();
-
-                if (!res.ok) {
-                    throw new Error(product.message);
-                }
+                const product = await apiRequest(`/api/wakuwaku/product/${productId}`);
 
                 // 投稿者本人確認
                 if (product.creator_user_hash !== currentUserHash) {
-                    document.getElementById('editForm').innerHTML = `
-                        <div class="text-center py-20">
-                            <p class="text-red-400">自分の投稿のみ編集できます</p>
-                        </div>
-                    `;
+                    showError('editForm', '自分の投稿のみ編集できます');
                     return;
                 }
 
                 renderEditForm(product);
             } catch (err) {
                 console.error(err);
-                document.getElementById('editForm').innerHTML = `
-                    <div class="text-center py-20">
-                        <p class="text-red-400">${err.message || 'プロダクトの読み込みに失敗しました'}</p>
-                    </div>
-                `;
+                showError('editForm', err.message || 'プロダクトの読み込みに失敗しました');
             }
         }
 
@@ -134,7 +114,7 @@
                     </div>
                     <div class="bg-slate-800/50 border border-red-500/30 rounded-xl p-6">
                         <div class="text-xs text-red-300 mb-4">
-                            ${sealedDate.getFullYear()}年${sealedDate.getMonth() + 1}月${sealedDate.getDate()}日に封印
+                            ${formatDateTime(sealedDate)}に封印
                         </div>
                         <pre class="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed font-mono">${product.initial_prompt_log}</pre>
                     </div>
@@ -168,15 +148,13 @@
             const url = document.getElementById('url').value.trim();
             const devObsession = document.getElementById('devObsession').value.trim();
 
-            if (!title) {
-                alert('アプリ名は必須です');
+            if (!validateRequired(title, 'アプリ名')) {
                 return;
             }
 
             try {
-                const res = await fetch('/api/wakuwaku/update-product', {
+                const data = await apiRequest('/api/wakuwaku/update-product', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         id: productId,
                         title,
@@ -186,9 +164,7 @@
                     })
                 });
 
-                const data = await res.json();
-
-                if (res.ok && data.success) {
+                if (data.success) {
                     alert('更新しました！');
                     location.href = `wakuwaku-detail.html?id=${productId}`;
                 } else {
@@ -199,6 +175,7 @@
                 alert('更新に失敗しました\n\n詳細: ' + err.message);
             }
         }
+        window.updateProduct = updateProduct;
 
         async function deleteProduct() {
             if (!confirm('本当にこの作品を削除しますか？\n\n削除すると復元できません。')) {
@@ -210,18 +187,15 @@
             }
 
             try {
-                const res = await fetch('/api/wakuwaku/delete-product', {
+                const data = await apiRequest('/api/wakuwaku/delete-product', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         id: productId,
                         user_hash: currentUserHash
                     })
                 });
 
-                const data = await res.json();
-
-                if (res.ok && data.success) {
+                if (data.success) {
                     alert('作品を削除しました');
                     location.href = 'wakuwaku.html';
                 } else {
@@ -232,6 +206,7 @@
                 alert('削除に失敗しました\n\n詳細: ' + err.message);
             }
         }
+        window.deleteProduct = deleteProduct;
 
         loadProduct();
     </script>

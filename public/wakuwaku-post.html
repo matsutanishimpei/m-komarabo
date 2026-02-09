@@ -179,21 +179,17 @@ User: いいね！でもここはもっと..."
         </div>
     </main>
 
-    <script>
-        const currentUserHash = localStorage.getItem('user_hash');
-        const authToken = localStorage.getItem('auth_token');
+    <script type="module">
+        import { checkAuth, apiRequest, validateRequired } from './js/common.js';
 
-        if (!currentUserHash || !authToken) {
-            alert('ログインが必要です');
-            location.href = 'login.html#wakuwaku';
-            throw new Error('Not logged in'); // スクリプト実行を停止
-        }
+        // 認証チェック
+        const auth = checkAuth(true, 'wakuwaku');
+        const currentUserHash = auth.userHash;
 
         // ベースプロンプトを取得
         async function loadBasePrompt() {
             try {
-                const res = await fetch('/api/wakuwaku/base-prompt');
-                const data = await res.json();
+                const data = await apiRequest('/api/wakuwaku/base-prompt');
                 document.getElementById('basePrompt').textContent = data.prompt;
             } catch (err) {
                 console.error(err);
@@ -207,6 +203,7 @@ User: いいね！でもここはもっと..."
                 alert('プロンプトをコピーしました！\nAIとの対話を楽しんでください。');
             });
         }
+        window.copyPrompt = copyPrompt;
 
         async function submitProduct() {
             const title = document.getElementById('title').value.trim();
@@ -214,8 +211,7 @@ User: いいね！でもここはもっと..."
             const initialPromptLog = document.getElementById('initialPromptLog').value.trim();
             const devObsession = document.getElementById('devObsession').value.trim();
 
-            if (!title || !initialPromptLog) {
-                alert('アプリ名とAIとの格闘記録は必須です');
+            if (!validateRequired(title, 'アプリ名') || !validateRequired(initialPromptLog, 'AIとの格闘記録')) {
                 return;
             }
 
@@ -224,9 +220,8 @@ User: いいね！でもここはもっと..."
             }
 
             try {
-                const res = await fetch('/api/wakuwaku/post-product', {
+                const data = await apiRequest('/api/wakuwaku/post-product', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         title,
                         url: url || null,
@@ -236,12 +231,7 @@ User: いいね！でもここはもっと..."
                     })
                 });
 
-                const data = await res.json();
-
-                console.log('Response status:', res.status);
-                console.log('Response data:', data);
-
-                if (res.ok && data.success) {
+                if (data.success) {
                     alert('投稿完了しました！\nあなたの初期衝動が永久保存されました。');
                     location.href = 'wakuwaku.html';
                 } else {
@@ -249,9 +239,10 @@ User: いいね！でもここはもっと..."
                 }
             } catch (err) {
                 console.error('投稿エラー:', err);
-                alert('投稿に失敗しました\n\n詳細: ' + err.message + '\n\nブラウザのコンソール（F12）を確認してください。');
+                alert('投稿に失敗しました\n\n詳細: ' + err.message);
             }
         }
+        window.submitProduct = submitProduct;
 
         // 初期化
         loadBasePrompt();
