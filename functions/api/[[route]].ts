@@ -212,14 +212,20 @@ app.post('/post-issue', async (c) => {
 
 // ベースプロンプト取得API
 app.get('/wakuwaku/base-prompt', async (c) => {
-  const config = await c.env.DB.prepare(
-    'SELECT value FROM site_configs WHERE key = ?'
-  ).bind('wakuwaku_base_prompt').first()
+  try {
+    const config = await c.env.DB.prepare(
+      'SELECT value FROM site_configs WHERE key = ?'
+    ).bind('wakuwaku_base_prompt').first()
 
-  return c.json({
-    success: true,
-    prompt: config?.value || 'プロンプトが設定されていません'
-  })
+    return c.json({
+      success: true,
+      prompt: config?.value || 'プロンプトが設定されていません'
+    })
+  } catch (err) {
+    console.error('Error fetching base prompt:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ success: false, message: 'プロンプトの取得に失敗しました: ' + errorMessage }, 500)
+  }
 })
 
 // プロダクト一覧取得API
@@ -259,29 +265,35 @@ app.get('/wakuwaku/product/:id', async (c) => {
 
 // プロダクト投稿API
 app.post('/wakuwaku/post-product', async (c) => {
-  const { title, url, initial_prompt_log, dev_obsession, user_hash } = await c.req.json()
+  try {
+    const { title, url, initial_prompt_log, dev_obsession, user_hash } = await c.req.json()
 
-  // バリデーション
-  if (!title || !initial_prompt_log) {
-    return c.json({ success: false, message: 'タイトルと初期衝動履歴は必須です' }, 400)
+    // バリデーション
+    if (!title || !initial_prompt_log) {
+      return c.json({ success: false, message: 'タイトルと初期衝動履歴は必須です' }, 400)
+    }
+
+    // ユーザー確認
+    const user = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE user_hash = ?'
+    ).bind(user_hash).first()
+
+    if (!user) {
+      return c.json({ success: false, message: 'ユーザーが見つかりません' }, 404)
+    }
+
+    // プロダクト作成
+    await c.env.DB.prepare(`
+      INSERT INTO products (creator_id, title, url, initial_prompt_log, dev_obsession, sealed_at)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `).bind(user.id, title, url || null, initial_prompt_log, dev_obsession || null).run()
+
+    return c.json({ success: true, message: 'プロダクトを投稿しました！' })
+  } catch (err) {
+    console.error('Error posting product:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    return c.json({ success: false, message: 'プロダクトの投稿に失敗しました: ' + errorMessage }, 500)
   }
-
-  // ユーザー確認
-  const user = await c.env.DB.prepare(
-    'SELECT id FROM users WHERE user_hash = ?'
-  ).bind(user_hash).first()
-
-  if (!user) {
-    return c.json({ success: false, message: 'ユーザーが見つかりません' }, 404)
-  }
-
-  // プロダクト作成
-  await c.env.DB.prepare(`
-    INSERT INTO products (creator_id, title, url, initial_prompt_log, dev_obsession, sealed_at)
-    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-  `).bind(user.id, title, url || null, initial_prompt_log, dev_obsession || null).run()
-
-  return c.json({ success: true, message: 'プロダクトを投稿しました！' })
 })
 
 // プロダクト更新API（initial_prompt_logは更新不可）
