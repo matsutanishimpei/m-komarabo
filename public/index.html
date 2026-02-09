@@ -4,249 +4,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>松谷の試作室 - さて、今日はどっちの扉を叩く？</title>
+    <title>松谷の試作室</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Noto+Sans+JP:wght@300;400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
 
         body {
-            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
         }
 
         .door-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .door-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.6s;
-        }
-
-        .door-card:hover::before {
-            left: 100%;
+            transition: all 0.3s ease;
         }
 
         .door-card:hover {
-            transform: translateY(-12px) scale(1.02);
-        }
-
-        .door-left:hover {
-            box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.5);
-        }
-
-        .door-right:hover {
-            box-shadow: 0 25px 50px -12px rgba(236, 72, 153, 0.5);
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
-        }
-
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes pulse-glow {
-
-            0%,
-            100% {
-                opacity: 0.5;
-            }
-
-            50% {
-                opacity: 1;
-            }
-        }
-
-        .pulse-glow {
-            animation: pulse-glow 3s ease-in-out infinite;
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .bg-animated {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-        }
-
-        @keyframes gradient {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+            transform: translateY(-4px);
         }
     </style>
 </head>
 
-<body class="bg-animated min-h-screen flex items-center justify-center p-6">
-    <!-- Main Container -->
-    <div class="max-w-7xl w-full">
-        <!-- Header Message -->
-        <div class="text-center mb-16 float-animation">
-            <h1 class="text-5xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl">
-                さて、今日は<br class="md:hidden">どっちの扉を叩く？
+<body class="bg-white min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-5xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-20">
+            <h1 class="text-5xl md:text-6xl font-light text-slate-900 mb-4 tracking-tight">
+                松谷の試作室
             </h1>
-            <p class="text-xl md:text-2xl text-white/90 font-light tracking-wide drop-shadow-lg">
-                松谷の試作室へようこそ
+            <p class="text-lg text-slate-500 font-light">
+                さて、今日はどっちの扉を叩く？
             </p>
         </div>
 
         <!-- Two Doors -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <!-- Left Door: Komarabo -->
-            <a href="komarabo.html" class="door-card door-left group block">
-                <div class="glass rounded-3xl p-10 h-full min-h-[500px] flex flex-col justify-between relative">
-                    <!-- Icon/Badge -->
-                    <div class="absolute top-8 right-8">
-                        <div class="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center pulse-glow">
-                            <span class="text-3xl">💡</span>
+            <a href="komarabo.html" class="door-card group block">
+                <div
+                    class="border border-slate-200 rounded-2xl p-10 h-full min-h-[400px] flex flex-col justify-between hover:border-blue-300 hover:shadow-lg hover:shadow-blue-50 transition-all bg-white">
+                    <!-- Icon -->
+                    <div class="mb-8">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-6">
+                            <span class="text-2xl">💡</span>
                         </div>
-                    </div>
-
-                    <!-- Content -->
-                    <div>
-                        <div
-                            class="inline-block px-4 py-2 bg-blue-500/30 rounded-full text-blue-100 text-sm font-bold mb-6 backdrop-blur-sm">
-                            PROBLEM SOLVING
-                        </div>
-                        <h2
-                            class="text-4xl md:text-5xl font-black text-white mb-4 group-hover:text-blue-200 transition">
+                        <h2 class="text-3xl font-semibold text-slate-900 mb-2">
                             困りごとラボ
                         </h2>
-                        <p class="text-sm text-blue-100 font-light mb-2 tracking-wider">
-                            コマラボ / Komarabo
+                        <p class="text-sm text-slate-400 font-light tracking-wide">
+                            Komarabo
                         </p>
                     </div>
 
                     <!-- Catchphrase -->
-                    <div class="my-8">
-                        <p class="text-2xl md:text-3xl font-bold text-white leading-relaxed">
+                    <div class="mb-8">
+                        <p class="text-xl text-slate-700 leading-relaxed font-light">
                             その悩み、<br>
                             プロトタイプの種になる。
                         </p>
                     </div>
 
                     <!-- Description -->
-                    <div class="space-y-3">
-                        <p class="text-white/80 text-sm leading-relaxed">
+                    <div class="space-y-2 mb-8">
+                        <p class="text-sm text-slate-500 leading-relaxed">
                             市民や非ITの方の「不便」を投稿し、解決策を議論する場所。
-                        </p>
-                        <p class="text-white/80 text-sm leading-relaxed">
-                            「なんとかしたい」という切実な思いを、技術で形にします。
                         </p>
                     </div>
 
                     <!-- CTA -->
-                    <div class="mt-8 flex items-center justify-between">
-                        <span class="text-blue-200 font-bold text-lg group-hover:translate-x-2 transition-transform">
-                            課題を見る →
-                        </span>
-                        <div class="flex gap-2">
-                            <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                            <span class="w-2 h-2 rounded-full bg-blue-300"></span>
-                            <span class="w-2 h-2 rounded-full bg-blue-200"></span>
-                        </div>
+                    <div
+                        class="flex items-center text-blue-600 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                        課題を見る
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                            </path>
+                        </svg>
                     </div>
                 </div>
             </a>
 
             <!-- Right Door: Waku-Waku Lab -->
-            <a href="wakuwaku.html" class="door-card door-right group block">
-                <div class="glass rounded-3xl p-10 h-full min-h-[500px] flex flex-col justify-between relative">
-                    <!-- Icon/Badge -->
-                    <div class="absolute top-8 right-8">
-                        <div class="w-16 h-16 rounded-full bg-pink-500/20 flex items-center justify-center pulse-glow">
-                            <span class="text-3xl">🎨</span>
+            <a href="wakuwaku.html" class="door-card group block">
+                <div
+                    class="border border-slate-200 rounded-2xl p-10 h-full min-h-[400px] flex flex-col justify-between hover:border-pink-300 hover:shadow-lg hover:shadow-pink-50 transition-all bg-white">
+                    <!-- Icon -->
+                    <div class="mb-8">
+                        <div class="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center mb-6">
+                            <span class="text-2xl">🎨</span>
                         </div>
-                    </div>
-
-                    <!-- Content -->
-                    <div>
-                        <div
-                            class="inline-block px-4 py-2 bg-pink-500/30 rounded-full text-pink-100 text-sm font-bold mb-6 backdrop-blur-sm">
-                            CREATIVE CHAOS
-                        </div>
-                        <h2
-                            class="text-4xl md:text-5xl font-black text-white mb-4 group-hover:text-pink-200 transition">
+                        <h2 class="text-3xl font-semibold text-slate-900 mb-2">
                             ワクワク試作室
                         </h2>
-                        <p class="text-sm text-pink-100 font-light mb-2 tracking-wider">
+                        <p class="text-sm text-slate-400 font-light tracking-wide">
                             Waku-Waku Lab
                         </p>
                     </div>
 
                     <!-- Catchphrase -->
-                    <div class="my-8">
-                        <p class="text-2xl md:text-3xl font-black text-white leading-relaxed">
+                    <div class="mb-8">
+                        <p class="text-xl text-slate-700 leading-relaxed font-light">
                             技術の無駄遣い、<br>
                             大歓迎。
                         </p>
                     </div>
 
                     <!-- Description -->
-                    <div class="space-y-3">
-                        <p class="text-white/80 text-sm leading-relaxed">
-                            「誰が使うんだこれ（笑）」という尖ったアプリや、エンジニアの変執的なこだわりが詰まったプロダクトの展示。
-                        </p>
-                        <p class="text-white/80 text-sm leading-relaxed">
-                            「おもろいものが見たい」という知的好奇心旺盛なあなたへ。
+                    <div class="space-y-2 mb-8">
+                        <p class="text-sm text-slate-500 leading-relaxed">
+                            尖ったアプリや、エンジニアの変執的なこだわりが詰まったプロダクトの展示。
                         </p>
                     </div>
 
                     <!-- CTA -->
-                    <div class="mt-8 flex items-center justify-between">
-                        <span class="text-pink-200 font-bold text-lg group-hover:translate-x-2 transition-transform">
-                            作品を見る →
-                        </span>
-                        <div class="flex gap-2">
-                            <span class="w-2 h-2 rounded-full bg-pink-400"></span>
-                            <span class="w-2 h-2 rounded-full bg-pink-300"></span>
-                            <span class="w-2 h-2 rounded-full bg-pink-200"></span>
-                        </div>
+                    <div
+                        class="flex items-center text-pink-600 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                        作品を見る
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                            </path>
+                        </svg>
                     </div>
                 </div>
             </a>
         </div>
 
         <!-- Footer -->
-        <div class="text-center mt-16">
-            <p class="text-white/60 text-sm font-light">
-                © 2026 Matsutani's Prototyping Studio. All experiments welcome.
+        <div class="text-center mt-20">
+            <p class="text-slate-400 text-sm font-light">
+                © 2026 Matsutani's Prototyping Studio
             </p>
         </div>
     </div>
