@@ -117,7 +117,7 @@
                     localStorage.setItem('auth_token', hashedPassword); // 簡易的なセッション管理
 
                     alert(data.message);
-                    location.href = 'index.html';
+                    location.href = 'komarabo.html';
                 } else {
                     alert('エラー: ' + data.message);
                 }
@@ -127,9 +127,9 @@
             }
         }
 
-        // すでにログイン済みなら index.html へ
+        // すでにログイン済みなら komarabo.html へ
         if (localStorage.getItem('user_hash') && localStorage.getItem('auth_token')) {
-            location.href = 'index.html';
+            location.href = 'komarabo.html';
         }
     </script>
 </body>

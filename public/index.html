@@ -4,426 +4,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>困りごとラボ 〜街の課題の試作室〜</title>
+    <title>松谷の試作室 - さて、今日はどっちの扉を叩く？</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Noto+Sans+JP:wght@300;400;700;900&display=swap');
 
         body {
             font-family: 'Outfit', 'Noto Sans JP', sans-serif;
         }
 
         .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .door-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .door-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .door-card:hover::before {
+            left: 100%;
+        }
+
+        .door-card:hover {
+            transform: translateY(-12px) scale(1.02);
+        }
+
+        .door-left:hover {
+            box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.5);
+        }
+
+        .door-right:hover {
+            box-shadow: 0 25px 50px -12px rgba(236, 72, 153, 0.5);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .bg-animated {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
     </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen pb-20">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 glass px-6 py-4 mb-8">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                困りごとラボ</h1>
-
-            <!-- Mode Switcher -->
-            <div class="flex bg-slate-200 p-1 rounded-xl">
-                <button id="btn-requester" onclick="switchMode('requester')"
-                    class="px-4 py-2 rounded-lg text-sm font-bold transition">相談者モード</button>
-                <button id="btn-developer" onclick="switchMode('developer')"
-                    class="px-4 py-2 rounded-lg text-sm font-bold transition">開発者モード</button>
-            </div>
-
-            <div class="flex items-center gap-4 text-sm">
-                <span class="text-slate-500 hidden md:inline">ログイン中: <strong id="display_user_hash"
-                        class="text-slate-800"></strong></span>
-                <button onclick="logout()"
-                    class="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 transition text-slate-700 font-medium text-xs">ログアウト</button>
-            </div>
+<body class="bg-animated min-h-screen flex items-center justify-center p-6">
+    <!-- Main Container -->
+    <div class="max-w-7xl w-full">
+        <!-- Header Message -->
+        <div class="text-center mb-16 float-animation">
+            <h1 class="text-5xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl">
+                さて、今日は<br class="md:hidden">どっちの扉を叩く？
+            </h1>
+            <p class="text-xl md:text-2xl text-white/90 font-light tracking-wide drop-shadow-lg">
+                松谷の試作室へようこそ
+            </p>
         </div>
-    </header>
 
-    <main class="max-w-6xl mx-auto px-6">
-        <!-- New Issue Section (Only in Requester Mode) -->
-        <section id="section-new-issue" class="mb-12">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                    <span
-                        class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">＋</span>
-                    新しい「困りごと」を投稿する
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Gemini API
-                            Key (Optional)</label>
-                        <input type="password" id="gemini_api_key" placeholder="AIコメントを受け取る場合は入力"
-                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Issue
-                            Title</label>
-                        <input type="text" id="title" placeholder="何にお困りですか？"
-                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label
-                            class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
-                        <textarea id="description" rows="3" placeholder="具体的な状況や、どうなってほしいかを教えてください"
-                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition"></textarea>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end">
-                    <button onclick="postIssue()"
-                        class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-lg shadow-blue-200">投稿する</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Dashboard / List View -->
-        <section id="section-dashboard">
-            <h3 id="dashboard-title" class="text-2xl font-bold text-slate-800 mb-8">マイ・ダッシュボード</h3>
-
-            <!-- Requester View (Kanban) -->
-            <div id="view-requester" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Open -->
-                <div class="flex flex-col gap-4">
-                    <div class="flex items-center justify-between px-2">
-                        <h4 class="font-bold text-slate-500 flex items-center gap-2 text-sm uppercase tracking-wider">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            受付中
-                        </h4>
-                        <span id="count-open"
-                            class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
-                    </div>
-                    <div id="list-open" class="flex flex-col gap-4 min-h-[150px] p-2 bg-slate-100/50 rounded-2xl"></div>
-                </div>
-                <!-- Progress -->
-                <div class="flex flex-col gap-4">
-                    <div class="flex items-center justify-between px-2">
-                        <h4 class="font-bold text-slate-500 flex items-center gap-2 text-sm uppercase tracking-wider">
-                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            進行中
-                        </h4>
-                        <span id="count-progress"
-                            class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
-                    </div>
-                    <div id="list-progress" class="flex flex-col gap-4 min-h-[150px] p-2 bg-slate-100/50 rounded-2xl">
-                    </div>
-                </div>
-                <!-- Closed -->
-                <div class="flex flex-col gap-4">
-                    <div class="flex items-center justify-between px-2">
-                        <h4 class="font-bold text-slate-500 flex items-center gap-2 text-sm uppercase tracking-wider">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            解決済み
-                        </h4>
-                        <span id="count-closed"
-                            class="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0</span>
-                    </div>
-                    <div id="list-closed" class="flex flex-col gap-4 min-h-[150px] p-2 bg-slate-100/50 rounded-2xl">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Developer View (List) -->
-            <div id="view-developer" class="hidden flex flex-col gap-12">
-                <!-- My Work -->
-                <div class="flex flex-col gap-6">
-                    <h4 class="font-bold text-slate-400 flex items-center gap-2 text-xs uppercase tracking-widest px-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                        あなたが現在着手中の課題
-                    </h4>
-                    <div id="list-developer-assigned"
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[100px] p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                    </div>
-                </div>
-
-                <!-- Available Issues -->
-                <div class="flex flex-col gap-6">
-                    <h4 class="font-bold text-slate-400 flex items-center gap-2 text-xs uppercase tracking-widest px-2">
-                        <span class="w-2 h-2 rounded-full bg-slate-300"></span>
-                        解決を待っている課題一覧
-                    </h4>
-                    <div id="list-developer-available" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script type="importmap">
-        {
-          "imports": {
-            "@google/generative-ai": "https://esm.run/@google/generative-ai"
-          }
-        }
-    </script>
-    <script type="module">
-        import { GoogleGenerativeAI } from "@google/generative-ai";
-
-        // ログインチェック
-        const currentUserHash = localStorage.getItem('user_hash');
-        const authToken = localStorage.getItem('auth_token');
-
-        if (!currentUserHash || !authToken) {
-            location.href = 'login.html';
-        }
-
-        let currentMode = 'requester';
-
-        // UIの初期化
-        document.getElementById('display_user_hash').innerText = currentUserHash;
-
-        function logout() {
-            localStorage.removeItem('user_hash');
-            localStorage.removeItem('auth_token');
-            location.href = 'login.html';
-        }
-        window.logout = logout;
-
-        function switchMode(mode) {
-            currentMode = mode;
-            const btnReq = document.getElementById('btn-requester');
-            const btnDev = document.getElementById('btn-developer');
-            const sectionNew = document.getElementById('section-new-issue');
-            const viewReq = document.getElementById('view-requester');
-            const viewDev = document.getElementById('view-developer');
-            const title = document.getElementById('dashboard-title');
-
-            if (mode === 'requester') {
-                btnReq.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
-                btnDev.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
-                sectionNew.classList.remove('hidden');
-                viewReq.classList.remove('hidden');
-                viewDev.classList.add('hidden');
-                title.innerText = 'マイ・ダッシュボード';
-            } else {
-                btnDev.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
-                btnReq.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
-                sectionNew.classList.add('hidden');
-                viewReq.classList.add('hidden');
-                viewDev.classList.remove('hidden');
-                title.innerText = '未解決の困りごと一覧（開発者向け）';
-            }
-            fetchIssues();
-        }
-        window.switchMode = switchMode;
-
-        async function fetchIssues() {
-            try {
-                const endpoint = currentMode === 'requester'
-                    ? `/api/list-issues?filter=mine&user_hash=${currentUserHash}`
-                    : `/api/list-issues?filter=all`;
-
-                const res = await fetch(endpoint);
-                if (!res.ok) {
-                    const errData = await res.json();
-                    throw new Error(errData.message || 'データ取得に失敗しました');
-                }
-                const data = await res.json();
-
-                if (!Array.isArray(data)) {
-                    console.error("Data is not an array:", data);
-                    return;
-                }
-
-                if (currentMode === 'requester') {
-                    renderRequester(data);
-                } else {
-                    renderDeveloper(data);
-                }
-            } catch (err) {
-                console.error("Fetch Error:", err);
-                alert("エラー: " + err.message);
-            }
-        }
-
-        function renderRequester(data) {
-            const openList = document.getElementById('list-open');
-            const progressList = document.getElementById('list-progress');
-            const closedList = document.getElementById('list-closed');
-
-            const renderItem = (i, showDelete = false) => `
-                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition group">
-                    <a href="detail.html?id=${i.id}" class="block">
-                        <h5 class="font-bold text-slate-800 group-hover:text-blue-600 transition truncate">${i.title}</h5>
-                        <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-tighter">${new Date(i.created_at).toLocaleDateString()}</p>
-                    </a>
-                    ${showDelete ? `
-                        <button onclick="deleteIssue(${i.id}, event)" class="mt-3 w-full py-2 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">
-                            取り下げる
-                        </button>
-                    ` : ''}
-                </div>
-            `;
-
-            const openItems = data.filter(i => (i.status || 'open') === 'open');
-            const progressItems = data.filter(i => i.status === 'progress');
-            const closedItems = data.filter(i => i.status === 'closed');
-
-            openList.innerHTML = openItems.map(i => renderItem(i, true)).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
-            progressList.innerHTML = progressItems.map(i => renderItem(i, false)).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
-            closedList.innerHTML = closedItems.map(i => renderItem(i, false)).join('') || `<p class="text-xs text-slate-300 text-center py-10">なし</p>`;
-
-            document.getElementById('count-open').innerText = openItems.length;
-            document.getElementById('count-progress').innerText = progressItems.length;
-            document.getElementById('count-closed').innerText = closedItems.length;
-        }
-
-        function renderDeveloper(data) {
-            const assignedList = document.getElementById('list-developer-assigned');
-            const availableList = document.getElementById('list-developer-available');
-
-            // 自分が着手中 (status=progress AND developer_user_hash=自分)
-            const myWork = data.filter(i => i.status === 'progress' && i.developer_user_hash === currentUserHash);
-            // 未着手 (status=open)
-            const available = data.filter(i => (i.status || 'open') === 'open');
-
-            const renderCard = (i, isMyWork) => `
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:border-blue-200 transition">
-                    <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[10px] font-bold ${isMyWork ? 'text-amber-500 bg-amber-50' : 'text-blue-500 bg-blue-50'} px-2 py-1 rounded tracking-widest uppercase">
-                                ${isMyWork ? 'Progress' : 'Open'}
-                            </span>
-                            <span class="text-[10px] text-slate-400 font-medium">${i.user_hash}</span>
+        <!-- Two Doors -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <!-- Left Door: Komarabo -->
+            <a href="komarabo.html" class="door-card door-left group block">
+                <div class="glass rounded-3xl p-10 h-full min-h-[500px] flex flex-col justify-between relative">
+                    <!-- Icon/Badge -->
+                    <div class="absolute top-8 right-8">
+                        <div class="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center pulse-glow">
+                            <span class="text-3xl">💡</span>
                         </div>
-                        <h5 class="text-lg font-bold text-slate-800 mb-2 truncate">${i.title}</h5>
-                        <p class="text-sm text-slate-500 line-clamp-2 mb-6 h-10">${i.description}</p>
                     </div>
-                    <div class="flex gap-2">
-                        <a href="detail.html?id=${i.id}" class="flex-1 text-center py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">詳細</a>
-                        ${isMyWork
-                    ? `<button onclick="unassignIssue(${i.id})" class="flex-[2] py-2.5 text-xs font-bold text-white bg-slate-600 rounded-xl hover:bg-slate-700 transition">挙手を下ろす</button>`
-                    : `<button onclick="takeIssue(${i.id})" class="flex-[2] py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition">着手する</button>`
-                }
+
+                    <!-- Content -->
+                    <div>
+                        <div
+                            class="inline-block px-4 py-2 bg-blue-500/30 rounded-full text-blue-100 text-sm font-bold mb-6 backdrop-blur-sm">
+                            PROBLEM SOLVING
+                        </div>
+                        <h2
+                            class="text-4xl md:text-5xl font-black text-white mb-4 group-hover:text-blue-200 transition">
+                            困りごとラボ
+                        </h2>
+                        <p class="text-sm text-blue-100 font-light mb-2 tracking-wider">
+                            コマラボ / Komarabo
+                        </p>
+                    </div>
+
+                    <!-- Catchphrase -->
+                    <div class="my-8">
+                        <p class="text-2xl md:text-3xl font-bold text-white leading-relaxed">
+                            その悩み、<br>
+                            プロトタイプの種になる。
+                        </p>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="space-y-3">
+                        <p class="text-white/80 text-sm leading-relaxed">
+                            市民や非ITの方の「不便」を投稿し、解決策を議論する場所。
+                        </p>
+                        <p class="text-white/80 text-sm leading-relaxed">
+                            「なんとかしたい」という切実な思いを、技術で形にします。
+                        </p>
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="mt-8 flex items-center justify-between">
+                        <span class="text-blue-200 font-bold text-lg group-hover:translate-x-2 transition-transform">
+                            課題を見る →
+                        </span>
+                        <div class="flex gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                            <span class="w-2 h-2 rounded-full bg-blue-300"></span>
+                            <span class="w-2 h-2 rounded-full bg-blue-200"></span>
+                        </div>
                     </div>
                 </div>
-            `;
+            </a>
 
-            assignedList.innerHTML = myWork.map(i => renderCard(i, true)).join('') || `<div class="col-span-full py-10 text-center text-slate-300 text-xs italic">現在着手中の課題はありません</div>`;
-            availableList.innerHTML = available.map(i => renderCard(i, false)).join('') || `<div class="col-span-full py-10 text-center text-slate-300 text-xs italic">募集中の課題はありません</div>`;
-        }
+            <!-- Right Door: Waku-Waku Lab -->
+            <a href="wakuwaku.html" class="door-card door-right group block">
+                <div class="glass rounded-3xl p-10 h-full min-h-[500px] flex flex-col justify-between relative">
+                    <!-- Icon/Badge -->
+                    <div class="absolute top-8 right-8">
+                        <div class="w-16 h-16 rounded-full bg-pink-500/20 flex items-center justify-center pulse-glow">
+                            <span class="text-3xl">🎨</span>
+                        </div>
+                    </div>
 
-        async function takeIssue(id) {
-            if (!confirm('この課題に着手しますか？')) return;
-            try {
-                const res = await fetch('/api/update-issue-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, status: 'progress', user_hash: currentUserHash })
-                });
-                if (res.ok) {
-                    // 即時反映のためにデータをリロード
-                    fetchIssues();
-                    alert('着手しました！「現在着手中」へ移動しました。');
-                }
-            } catch (err) {
-                alert('エラーが発生しました');
-            }
-        }
-        window.takeIssue = takeIssue;
+                    <!-- Content -->
+                    <div>
+                        <div
+                            class="inline-block px-4 py-2 bg-pink-500/30 rounded-full text-pink-100 text-sm font-bold mb-6 backdrop-blur-sm">
+                            CREATIVE CHAOS
+                        </div>
+                        <h2
+                            class="text-4xl md:text-5xl font-black text-white mb-4 group-hover:text-pink-200 transition">
+                            ワクワク試作室
+                        </h2>
+                        <p class="text-sm text-pink-100 font-light mb-2 tracking-wider">
+                            Waku-Waku Lab
+                        </p>
+                    </div>
 
-        async function unassignIssue(id) {
-            if (!confirm('この課題への挙手を下ろしますか？（未着手状態に戻ります）')) return;
-            try {
-                const res = await fetch('/api/unassign-issue', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
-                if (res.ok) {
-                    fetchIssues();
-                    alert('挙手を下ろしました。');
-                }
-            } catch (err) {
-                alert('エラーが発生しました');
-            }
-        }
-        window.unassignIssue = unassignIssue;
+                    <!-- Catchphrase -->
+                    <div class="my-8">
+                        <p class="text-2xl md:text-3xl font-black text-white leading-relaxed">
+                            技術の無駄遣い、<br>
+                            大歓迎。
+                        </p>
+                    </div>
 
-        async function deleteIssue(id, event) {
-            event.preventDefault();
-            event.stopPropagation();
+                    <!-- Description -->
+                    <div class="space-y-3">
+                        <p class="text-white/80 text-sm leading-relaxed">
+                            「誰が使うんだこれ（笑）」という尖ったアプリや、エンジニアの変執的なこだわりが詰まったプロダクトの展示。
+                        </p>
+                        <p class="text-white/80 text-sm leading-relaxed">
+                            「おもろいものが見たい」という知的好奇心旺盛なあなたへ。
+                        </p>
+                    </div>
 
-            if (!confirm('この課題を取り下げますか？\n※着手されていない課題のみ削除できます')) return;
+                    <!-- CTA -->
+                    <div class="mt-8 flex items-center justify-between">
+                        <span class="text-pink-200 font-bold text-lg group-hover:translate-x-2 transition-transform">
+                            作品を見る →
+                        </span>
+                        <div class="flex gap-2">
+                            <span class="w-2 h-2 rounded-full bg-pink-400"></span>
+                            <span class="w-2 h-2 rounded-full bg-pink-300"></span>
+                            <span class="w-2 h-2 rounded-full bg-pink-200"></span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-            try {
-                const res = await fetch('/api/delete-issue', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, user_hash: currentUserHash })
-                });
-
-                const result = await res.json();
-
-                if (res.ok) {
-                    fetchIssues();
-                    alert(result.message || '課題を削除しました');
-                } else {
-                    alert(result.message || '削除に失敗しました');
-                }
-            } catch (err) {
-                console.error('Delete Error:', err);
-                alert('エラーが発生しました');
-            }
-        }
-        window.deleteIssue = deleteIssue;
-
-        async function postIssue() {
-            const apiKey = document.getElementById('gemini_api_key').value.trim();
-            const title = document.getElementById('title').value;
-            const description = document.getElementById('description').value;
-
-            if (!title || !description) {
-                alert('タイトルと内容を入力してください');
-                return;
-            }
-
-            const payload = { user_hash: currentUserHash, title, description };
-
-            const postPromise = fetch('/api/post-issue', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(async res => {
-                if (!res.ok) {
-                    const error = await res.json();
-                    throw new Error(error.message);
-                }
-                fetchIssues();
-            });
-
-            if (apiKey) {
-                try {
-                    const genAI = new GoogleGenerativeAI(apiKey);
-                    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }, { apiVersion: "v1beta" });
-                    const prompt = `ユーザーから以下の『困りごと』が投稿されました。これに対して、共感するような短い一言（30文字以内）を返してください。\nタイトル: ${title}\n内容: ${description}`;
-                    model.generateContent(prompt).then(result => {
-                        alert("AIからのコメント: " + result.response.text());
-                    }).catch(err => console.error("Gemini Error:", err));
-                } catch (err) {
-                    console.error("Gemini Setup Error:", err);
-                }
-            }
-
-            try {
-                await postPromise;
-                alert('投稿しました！');
-                document.getElementById('title').value = '';
-                document.getElementById('description').value = '';
-            } catch (err) {
-                alert('投稿エラー: ' + err.message);
-            }
-        }
-
-        window.postIssue = postIssue;
-
-        // デフォルトで相談者モード
-        switchMode('requester');
-    </script>
+        <!-- Footer -->
+        <div class="text-center mt-16">
+            <p class="text-white/60 text-sm font-light">
+                © 2026 Matsutani's Prototyping Studio. All experiments welcome.
+            </p>
+        </div>
+    </div>
 </body>
 
 </html>

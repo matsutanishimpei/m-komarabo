@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ワクワク試作室 - 技術の無駄遣い、大歓迎。</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Noto+Sans+JP:wght@300;400;700;900&display=swap');
+
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .project-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .bg-gradient-pink {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .bg-gradient-purple {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .bg-gradient-orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .bg-gradient-green {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 min-h-screen">
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50 px-6 py-4 mb-12">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-black text-white hover:text-pink-200 transition">
+                ← 戻る
+            </a>
+            <h1 class="text-2xl md:text-3xl font-black text-white">
+                🎨 ワクワク試作室
+            </h1>
+            <div class="w-20"></div> <!-- Spacer for centering -->
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 pb-20">
+        <!-- Hero Section -->
+        <section class="text-center mb-16">
+            <h2 class="text-4xl md:text-6xl font-black text-white mb-6 drop-shadow-2xl">
+                技術の無駄遣い、大歓迎。
+            </h2>
+            <p class="text-xl md:text-2xl text-white/90 font-light max-w-3xl mx-auto leading-relaxed">
+                「誰が使うんだこれ（笑）」という尖ったアプリや、<br>
+                エンジニアの変執的なこだわりが詰まったプロダクトの展示室。
+            </p>
+        </section>
+
+        <!-- Projects Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Project Card 1 -->
+            <div class="project-card bg-white rounded-3xl overflow-hidden shadow-2xl">
+                <div class="bg-gradient-pink h-48 flex items-center justify-center">
+                    <span class="text-8xl float">🎯</span>
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="px-3 py-1 bg-pink-100 text-pink-600 text-xs font-bold rounded-full">実験中</span>
+                        <span class="text-xs text-slate-400">2026.02</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-3">
+                        プロジェクト準備中
+                    </h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        近日公開予定！エンジニアの遊び心が詰まった作品をお楽しみに。
+                    </p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">#実験</span>
+                        <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">#遊び</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Card 2 -->
+            <div class="project-card bg-white rounded-3xl overflow-hidden shadow-2xl">
+                <div class="bg-gradient-purple h-48 flex items-center justify-center">
+                    <span class="text-8xl float" style="animation-delay: 0.5s;">🚀</span>
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full">構想中</span>
+                        <span class="text-xs text-slate-400">Coming Soon</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-3">
+                        次なる挑戦
+                    </h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        「なんでそれ作ったの？」と言われるような、面白いものを企画中です。
+                    </p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">#アイデア</span>
+                        <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">#挑戦</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Card 3 -->
+            <div class="project-card bg-white rounded-3xl overflow-hidden shadow-2xl">
+                <div class="bg-gradient-orange h-48 flex items-center justify-center">
+                    <span class="text-8xl float" style="animation-delay: 1s;">✨</span>
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded-full">妄想中</span>
+                        <span class="text-xs text-slate-400">TBD</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-3">
+                        未来のカオス
+                    </h3>
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        技術的好奇心の赴くままに。まだ形になっていないアイデアたち。
+                    </p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">#妄想</span>
+                        <span class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">#カオス</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="mt-20 text-center">
+            <div class="glass rounded-3xl p-12 max-w-3xl mx-auto">
+                <h3 class="text-3xl md:text-4xl font-black text-white mb-6">
+                    あなたも作品を展示しませんか？
+                </h3>
+                <p class="text-white/80 text-lg mb-8 leading-relaxed">
+                    「これ、誰得？」と思われるような作品、大歓迎です。<br>
+                    技術の無駄遣いこそ、イノベーションの種。
+                </p>
+                <button
+                    class="px-10 py-4 bg-white text-pink-600 font-black text-lg rounded-2xl hover:bg-pink-50 transition shadow-2xl hover:scale-105 transform">
+                    作品を投稿する（準備中）
+                </button>
+            </div>
+        </section>
+
+        <!-- Philosophy -->
+        <section class="mt-20">
+            <div class="max-w-4xl mx-auto">
+                <h3 class="text-3xl font-black text-white text-center mb-12">
+                    ワクワク試作室の哲学
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-5xl mb-4">🎪</div>
+                        <h4 class="text-xl font-bold text-white mb-3">遊び心</h4>
+                        <p class="text-white/70 text-sm">
+                            真面目に遊ぶ。それが創造の源泉。
+                        </p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-5xl mb-4">🔬</div>
+                        <h4 class="text-xl font-bold text-white mb-3">実験精神</h4>
+                        <p class="text-white/70 text-sm">
+                            失敗は成功のもと。試してナンボ。
+                        </p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-5xl mb-4">🎨</div>
+                        <h4 class="text-xl font-bold text-white mb-3">こだわり</h4>
+                        <p class="text-white/70 text-sm">
+                            誰も気づかない細部に魂を込める。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-12">
+        <p class="text-white/60 text-sm font-light">
+            © 2026 Waku-Waku Lab. Keep experimenting, keep playing.
+        </p>
+    </footer>
+</body>
+
+</html>
